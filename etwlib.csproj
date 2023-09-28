@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Title>etwlib</Title>
+    <Authors>Aaron LeMasters</Authors>
+    <Description>etwlib is a .NET library that provides raw access to Microsoft Windows Event Tracing (ETW) infrastructure including providers, manifests, and event data. etwlib is meant to be the foundation for larger projects that leverage its capabilities and is distributed as a Nuget package.</Description>
+    <PackageProjectUrl>https://github.com/lilhoser/etwlib</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/lilhoser/etwlib</RepositoryUrl>
+    <PackageTags>microsoft;windows;etw;tracing;debugging</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="TestResults\**" />
+    <Compile Remove="UnitTests\**" />
+    <EmbeddedResource Remove="TestResults\**" />
+    <EmbeddedResource Remove="UnitTests\**" />
+    <None Remove="TestResults\**" />
+    <None Remove="UnitTests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="symbolresolver" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

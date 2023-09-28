@@ -1,0 +1,28 @@
+name: CI
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  etwlib_Unit_Tests:
+    runs-on: windows-latest
+    steps:
+      # setup .NET using setup-dotnet action
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3.0.3
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+      - uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - name: Restore nuget packages
+        run: nuget restore etwlib.sln
+      - name: Build Solution
+        run: |
+          msbuild.exe etwlib.sln /nologo /nr:false /p:platform="Any CPU" /p:configuration="Release"
+      - name: Test
+        run: sudo dotnet test --no-restore --verbosity normal

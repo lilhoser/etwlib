@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "etwlib": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
