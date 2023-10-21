@@ -22,30 +22,30 @@ namespace etwlib
 {
     public static class TraceLogger
     {
-        private static readonly string m_TraceFileDir = Path.Combine(
-            new string[] { Path.GetTempPath(), "etwlib", "Logs" });
-        private static string m_Location = Path.Combine(new string[] { m_TraceFileDir,
-                            DateTime.Now.ToString("yyyy-MM-dd-HHmmss") +
-                            ".txt" });
+        private static MemoryStream m_BaseStream = new MemoryStream();
         private static TextWriterTraceListener m_TraceListener =
-            new TextWriterTraceListener(m_Location, "etwlibListener");
+            new TextWriterTraceListener(m_BaseStream, "etwlibListener");
         private static SourceSwitch m_Switch =
             new SourceSwitch("etwlibListener", "Verbose");
         private static TraceSource[] Sources = {
+            new TraceSource("TraceSession", SourceLevels.Verbose),
             new TraceSource("RealTimeTrace", SourceLevels.Verbose),
             new TraceSource("FileTrace", SourceLevels.Verbose),
             new TraceSource("EventParser", SourceLevels.Verbose),
             new TraceSource("ProviderParser", SourceLevels.Verbose),
             new TraceSource("ManifestParser", SourceLevels.Verbose),
+            new TraceSource("SessionParser", SourceLevels.Verbose),
         };
 
         public enum TraceLoggerType
         {
+            TraceSession,
             RealTimeTrace,
             FileTrace,
             EtwEventParser,
             EtwProviderParser,
             EtwManifestParser,
+            EtwSessionParser,
             Max
         }
 
@@ -71,6 +71,11 @@ namespace etwlib
                 throw new Exception("Invalid logger type");
             }
             Sources[(int)Type].TraceEvent(EventType, 1, Message);
+        }
+
+        public static MemoryStream GetStream()
+        {
+            return m_BaseStream;
         }
     }
 }

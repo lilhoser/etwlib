@@ -37,16 +37,12 @@ namespace etwlib
                 return false;
             }
             var field = Other as ParsedEtwString;
-            if (field == null)
-            {
-                return false;
-            }
-            return Equals(Other);
+            return Equals(field);
         }
 
         public bool Equals(ParsedEtwString? Other)
         {
-            if (Other == null)
+            if ((object)Other == null)
             {
                 return false;
             }

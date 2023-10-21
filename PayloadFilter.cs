@@ -85,6 +85,17 @@ namespace etwlib
 
         public void AddPredicate(string Field, PAYLOAD_OPERATOR Operator, string Value)
         {
+            ValidatePredicate(Field, Operator, Value);
+            m_Predicates.Add(new PAYLOAD_FILTER_PREDICATE
+            {
+                PayloadFieldName = Field,
+                CompareOp = Operator,
+                Value = Value,
+            });
+        }
+
+        public static void ValidatePredicate(string Field, PAYLOAD_OPERATOR Operator, string Value)
+        {
             if (string.IsNullOrEmpty(Field) || string.IsNullOrEmpty(Value))
             {
                 throw new Exception("A field name and value is required.");
@@ -121,7 +132,7 @@ namespace etwlib
                 case PAYLOAD_OPERATOR.Between:
                 case PAYLOAD_OPERATOR.NotBetween:
                     {
-                        _ = GetBetweenArguments(Value);
+                        _ = Utilities.GetBetweenArguments(Value);
                         break;
                     }
                 //
@@ -132,33 +143,6 @@ namespace etwlib
                         break;
                     }
             }
-
-            m_Predicates.Add(new PAYLOAD_FILTER_PREDICATE
-            {
-                PayloadFieldName = Field,
-                CompareOp = Operator,
-                Value = Value,
-            });
-        }
-
-        public static (int,int) GetBetweenArguments(string Value)
-        {
-            var loc = Value.IndexOf(",");
-            if (loc < 0)
-            {
-                throw new Exception("Between operator requires two integers " +
-                    "separated by a comma");
-            }
-            var values = Value.Split(',');
-            if (values.Length != 2)
-            {
-                throw new Exception("Between operator requires two integers " +
-                    "separated by a comma");
-            }
-
-            var first = Utilities.StringToInteger(values[0]);
-            var second = Utilities.StringToInteger(values[1]);
-            return (first, second);
         }
 
         public nint Create()

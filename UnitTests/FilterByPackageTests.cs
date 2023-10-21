@@ -24,7 +24,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using static etwlib.NativeTraceConsumer;
 using static etwlib.NativeTraceControl;
 using static UnitTests.Shared;
@@ -34,26 +33,6 @@ namespace UnitTests
     [TestClass]
     public class FilterByPackageTests
     {
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern int GetPackageFullName(
-            [In] nint hProcess,
-            [In, Out] ref uint packageFullNameLength,
-            [Out] StringBuilder fullName);
-
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern int GetApplicationUserModelId(
-            [In] nint hProcess,
-            [In, Out] ref uint applicationUserModelIdLength,
-            [Out] StringBuilder applicationUserModelId);
-
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern int ParseApplicationUserModelId(
-            [In] string applicationUserModelId,
-            [In, Out] ref uint packageFamilyNameLength,
-            [In] StringBuilder packageFamilyName,
-            [In, Out] ref uint packageRelativeApplicationIdLength,
-            [Out] StringBuilder packageRelativeApplicationId);
-
         [DataTestMethod]
         [DataRow(true, 5)]
         [DataRow(false, 5)]
@@ -87,7 +66,7 @@ namespace UnitTests
                 {
                     continue; // probably the process died
                 }
-                var package = GetPackage(process.Handle);
+                var package = MSStoreAppPackageHelper.GetPackage(process.Handle);
                 if (package == null)
                 {
                     continue;
@@ -114,52 +93,6 @@ namespace UnitTests
             Assert.Fail();
         }
 
-        private Tuple<string, string>? GetPackage(nint ProcessHandle)
-        {
-            uint bufferLength = 1024;
-
-            //
-            // The package full name is a serialized form of the Package ID, which
-            // consists of identifying info like: name, publisher, architecture, etc.
-            // This is what the ETW filter type EVENT_FILTER_TYPE_PACKAGE_ID  wants.
-            //
-            var packageId = new StringBuilder((int)bufferLength);
-            var result = GetPackageFullName(ProcessHandle, ref bufferLength, packageId);
-            if (result != ERROR_SUCCESS)
-            {
-                return null;
-            }
-
-            var userModelId = new StringBuilder((int)bufferLength);
-            result = GetApplicationUserModelId(ProcessHandle, ref bufferLength, userModelId);
-            if (result != ERROR_SUCCESS)
-            {
-                return null;
-            }
-
-            //
-            // The ETW filter type EVENT_FILTER_TYPE_PACKAGE_APP_ID wants the 
-            // "package-relative APP ID (PRAID)" which must be parsed from
-            // the "application user model ID".
-            //
-            var packageFamilyLength = bufferLength;
-            var packageFamily = new StringBuilder((int)packageFamilyLength);
-            var relativeAppIdLength = bufferLength;
-            var relativeAppId = new StringBuilder((int)relativeAppIdLength);
-            result = ParseApplicationUserModelId(userModelId.ToString(),
-                ref packageFamilyLength,
-                packageFamily,
-                ref relativeAppIdLength,
-                relativeAppId);
-            if (result != ERROR_SUCCESS)
-            {
-                return null;
-            }
-
-            return new Tuple<string, string>(
-                packageId.ToString(), relativeAppId.ToString());
-        }
-
         private bool TryWindowsStoreApp(string PackageId, string AppId, bool TestPackageId)
         {
             int eventsConsumed = 0;
@@ -171,25 +104,22 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_LoggingChannel,
-                EventTraceLevel.Verbose,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
                 {
+                    var provider = trace.AddProvider(
+                        s_LoggingChannel, EventTraceLevel.Verbose, 0xFFFFFFFFFFFFFFFF, 0);
                     if (TestPackageId)
                     {
                         Assert.IsNotNull(PackageId);
-                        trace.SetFilteredPackageId(PackageId);
+                        provider.SetFilteredPackageId(PackageId);
                     }
                     else
                     {
                         Assert.IsNotNull(AppId);
-                        trace.SetFilteredPackageAppId(AppId);
+                        provider.SetFilteredPackageAppId(AppId);
                     }
                     trace.Start();
                     stopwatch.Start();
@@ -242,7 +172,7 @@ namespace UnitTests
                         try
                         {
                             var process = Process.GetProcessById((int)parsedEvent.ProcessId);
-                            var package = GetPackage(process.Handle);
+                            var package = MSStoreAppPackageHelper.GetPackage(process.Handle);
                             if (package == null)
                             {
                                 return;

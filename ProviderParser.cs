@@ -534,6 +534,48 @@ namespace etwlib
             return results;            
         }
 
+        public
+        static
+        bool
+        IsManifestKnown(Guid ProviderGuid)
+        {
+            var buffer = nint.Zero;
+            try
+            {
+                uint bufferSize = 0;
+                for (; ; )
+                {
+                    var status = TdhEnumerateManifestProviderEvents(
+                        ref ProviderGuid,
+                        buffer,
+                        ref bufferSize);
+                    switch (status)
+                    {
+                        case ERROR_SUCCESS:
+                        case ERROR_INSUFFICIENT_BUFFER:
+                            {
+                                return true;
+                            }
+                        case ERROR_NOT_FOUND:
+                        case ERROR_FILE_NOT_FOUND:
+                        case ERROR_RESOURCE_TYPE_NOT_FOUND:
+                        case ERROR_MUI_FILE_NOT_FOUND:
+                            {
+                                return false;
+                            }
+                        default:
+                            {
+                                return false;
+                            }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         private
         static
         List<ParsedEtwEvent>

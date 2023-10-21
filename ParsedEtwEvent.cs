@@ -28,12 +28,12 @@ namespace etwlib
         public uint ProcessId { get; set; }
         public long ProcessStartKey { get; set; }
         public uint ThreadId { get; set; }
-        public byte[]? UserSid { get; set; }
+        public string? UserSid { get; set; }
         public Guid ActivityId { get; set; }
         public DateTime Timestamp { get; set; }
         public string Level { get; set; }
         public ParsedEtwString? Channel { get; set; }
-        public List<string>? Keywords { get; set; }
+        public string? Keywords { get; set; }
         public ulong KeywordsUlong { get; set; }
         public ParsedEtwString? Task { get; set; }
         public ParsedEtwString? Opcode { get; set; }
@@ -64,14 +64,7 @@ namespace etwlib
             }
             sb.AppendLine($"Level: {Level}");
             sb.AppendLine($"Channel: {Channel}"); ;
-            if (Keywords != null)
-            {
-                sb.AppendLine("Keywords: ");
-                foreach (var kw in Keywords)
-                {
-                    sb.AppendLine($"   {kw}");
-                }
-            }
+            sb.AppendLine($"Keywords: {Keywords}");
             sb.AppendLine($"Task: {Task}");
             sb.AppendLine($"Opcode: {Opcode}");
             sb.AppendLine($"Template data:");

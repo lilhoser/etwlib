@@ -16,9 +16,81 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
+using System.Runtime.InteropServices;
+using System.Text;
+using static etwlib.NativeTraceConsumer;
 
 namespace etwlib
 {
+    public static class MSStoreAppPackageHelper
+    {
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern int GetPackageFullName(
+                [In] nint hProcess,
+                [In, Out] ref uint packageFullNameLength,
+                [Out] StringBuilder fullName);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern int GetApplicationUserModelId(
+            [In] nint hProcess,
+            [In, Out] ref uint applicationUserModelIdLength,
+            [Out] StringBuilder applicationUserModelId);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern int ParseApplicationUserModelId(
+            [In] string applicationUserModelId,
+            [In, Out] ref uint packageFamilyNameLength,
+            [In] StringBuilder packageFamilyName,
+            [In, Out] ref uint packageRelativeApplicationIdLength,
+            [Out] StringBuilder packageRelativeApplicationId);
+
+        public static Tuple<string, string>? GetPackage(nint ProcessHandle)
+        {
+            uint bufferLength = 1024;
+
+            //
+            // The package full name is a serialized form of the Package ID, which
+            // consists of identifying info like: name, publisher, architecture, etc.
+            // This is what the ETW filter type EVENT_FILTER_TYPE_PACKAGE_ID  wants.
+            //
+            var packageId = new StringBuilder((int)bufferLength);
+            var result = GetPackageFullName(ProcessHandle, ref bufferLength, packageId);
+            if (result != ERROR_SUCCESS)
+            {
+                return null;
+            }
+
+            var userModelId = new StringBuilder((int)bufferLength);
+            result = GetApplicationUserModelId(ProcessHandle, ref bufferLength, userModelId);
+            if (result != ERROR_SUCCESS)
+            {
+                return null;
+            }
+
+            //
+            // The ETW filter type EVENT_FILTER_TYPE_PACKAGE_APP_ID wants the 
+            // "package-relative APP ID (PRAID)" which must be parsed from
+            // the "application user model ID".
+            //
+            var packageFamilyLength = bufferLength;
+            var packageFamily = new StringBuilder((int)packageFamilyLength);
+            var relativeAppIdLength = bufferLength;
+            var relativeAppId = new StringBuilder((int)relativeAppIdLength);
+            result = ParseApplicationUserModelId(userModelId.ToString(),
+                ref packageFamilyLength,
+                packageFamily,
+                ref relativeAppIdLength,
+                relativeAppId);
+            if (result != ERROR_SUCCESS)
+            {
+                return null;
+            }
+
+            return new Tuple<string, string>(
+                packageId.ToString(), relativeAppId.ToString());
+        }
+    }
+
     public static class Utilities
     {
         public static int StringToInteger(string Value)
@@ -36,5 +108,26 @@ namespace etwlib
                 return value;
             }
         }
+
+        public static (int, int) GetBetweenArguments(string Value)
+        {
+            var loc = Value.IndexOf(",");
+            if (loc < 0)
+            {
+                throw new Exception("Between operator requires two integers " +
+                    "separated by a comma");
+            }
+            var values = Value.Split(',');
+            if (values.Length != 2)
+            {
+                throw new Exception("Between operator requires two integers " +
+                    "separated by a comma");
+            }
+
+            var first = Utilities.StringToInteger(values[0]);
+            var second = Utilities.StringToInteger(values[1]);
+            return (first, second);
+        }
     }
+
 }

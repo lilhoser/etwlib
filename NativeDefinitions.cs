@@ -61,6 +61,7 @@ namespace etwlib
             CaptureState = 2,
         }
 
+        [Flags]
         public enum EnableTraceProperties : uint
         {
             Sid = 0x1,
@@ -149,6 +150,46 @@ namespace etwlib
             QPC = 1,
             SystemTime = 2,
             CpuCycleCounter = 3
+        }
+
+        public enum TRACE_QUERY_INFO_CLASS : uint
+        {
+            TraceGuidQueryList = 0,
+            TraceGuidQueryInfo = 1,
+            TraceGuidQueryProcess = 2,
+            TraceStackTracingInfo = 3,
+            TraceSystemTraceEnableFlagsInfo = 4,
+            TraceSampledProfileIntervalInfo = 5,
+            TraceProfileSourceConfigInfo = 6,
+            TraceProfileSourceListInfo = 7,
+            TracePmcEventListInfo = 8,
+            TracePmcCounterListInfo = 9,
+            TraceSetDisallowList = 10,
+            TraceVersionInfo = 11,
+            TraceGroupQueryList = 12,
+            TraceGroupQueryInfo = 13,
+            TraceDisallowListQuery = 14,
+            TraceInfoReserved15,
+            TracePeriodicCaptureStateListInfo = 16,
+            TracePeriodicCaptureStateInfo = 17,
+            TraceProviderBinaryTracking = 18,
+            TraceMaxLoggersQuery = 19,
+            TraceLbrConfigurationInfo = 20,
+            TraceLbrEventListInfo = 21,
+            TraceMaxPmcCounterQuery = 22,
+            TraceStreamCount = 23,
+            TraceStackCachingInfo = 24,
+            TracePmcCounterOwners = 25,
+            TraceUnifiedStackCachingInfo = 26,
+            TracePmcSessionInformation = 27,
+            MaxTraceSetInfoClass = 28
+        }
+
+        [Flags]
+        public enum TRACE_PROVIDER_INSTANCE_FLAGS : uint
+        {
+            TRACE_PROVIDER_FLAG_LEGACY = 1,
+            TRACE_PROVIDER_FLAG_PRE_ENABLE = 2
         }
 
         //
@@ -319,6 +360,38 @@ namespace etwlib
             public EventTraceLevel Level;
             [MarshalAs(UnmanagedType.U1)]
             public bool FilterIn;
+        }
+
+        //
+        // advapi structs for enumerating trace sessions
+        //
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct TRACE_GUID_INFO
+        {
+            public uint InstanceCount;
+            public uint Reserved;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct TRACE_PROVIDER_INSTANCE_INFO
+        {
+            public uint NextOffset;
+            public uint EnableCount;
+            public uint Pid;
+            public TRACE_PROVIDER_INSTANCE_FLAGS Flags;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct TRACE_ENABLE_INFO
+        {
+            public uint IsEnabled;
+            public EventTraceLevel Level;
+            public byte Reserved1;
+            public ushort LoggerId;
+            public EnableTraceProperties EnableProperty;
+            public uint Reserved2;
+            public ulong MatchAnyKeyword;
+            public ulong MatchAllKeyword;
         }
 
         #endregion
@@ -904,6 +977,16 @@ namespace etwlib
             [In, Out] nint Buffer, // PPROVIDER_FIELD_INFOARRAY
             [In, Out] ref uint BufferSize
         );
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern uint EnumerateTraceGuidsEx(
+            [In] NativeTraceControl.TRACE_QUERY_INFO_CLASS InfoClass,
+            [In] nint InBuffer,
+            [In] uint InBufferSize,
+            [In, Out] nint OutBuffer,
+            [In] uint OutBufferSize,
+            [In, Out] ref uint ReturnLength
+        );
         #endregion
 
         public const int ERROR_SUCCESS = 0;
@@ -915,6 +998,7 @@ namespace etwlib
         public const int ERROR_NOT_FOUND = 1168;
         public const int ERROR_XML_PARSE_ERROR = 1465;
         public const int ERROR_RESOURCE_TYPE_NOT_FOUND = 1813;
+        public const int ERROR_WMI_GUID_NOT_FOUND = 4200;
         public const int ERROR_EMPTY = 4306;
         public const int ERROR_EVT_INVALID_EVENT_DATA = 15005;
         public const int ERROR_MUI_FILE_NOT_FOUND = 15100;

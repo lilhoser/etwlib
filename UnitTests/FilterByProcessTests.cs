@@ -44,12 +44,7 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_RpcEtwGuid,
-                EventTraceLevel.LogAlways,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
@@ -62,7 +57,9 @@ namespace UnitTests
                         p => p.ProcessName != null && p.ProcessName.Contains("svchost")).Select(
                         p => p.Id).Take(ProcessCount).ToList();
                     Debug.Assert(targets.Count > 0);
-                    trace.SetProcessFilter(targets);
+                    var provider = trace.AddProvider(
+                        s_RpcEtwGuid, EventTraceLevel.LogAlways, 0xFFFFFFFFFFFFFFFF, 0);
+                    provider.SetProcessFilter(targets);
                     trace.Start();
 
                     //

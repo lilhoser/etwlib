@@ -47,25 +47,23 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_RpcEtwGuid,
-                EventTraceLevel.Information,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
                 {
+                    var provider = trace.AddProvider(
+                        s_RpcEtwGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+
                     //
                     // We'll use RpcClientCallStart_V1 and RpcClientCallStop7_V1
                     //
                     var eventIds = new List<int> { 5, 7 };
-                    trace.SetEventIdsFilter(eventIds, Enable);
+                    provider.SetEventIdsFilter(eventIds, Enable);
                     if (Stackwalk)
                     {
                         var eventIds2 = new List<int> { 5 };
-                        trace.SetStackwalkEventIdsFilter(eventIds2, Enable);
+                        provider.SetStackwalkEventIdsFilter(eventIds2, Enable);
                     }
 
                     trace.Start();

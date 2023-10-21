@@ -22,16 +22,16 @@ Before diving in, you should understand basic ETW terminology and the mechanics 
 To start a real-time, information-level trace for the Microsoft-Windows-RPC provider, with no keywords:
 
 ```
-using (var trace = new RealTimeTrace(
-       "My ETW Trace",
-       new Guid("6ad52b32-d609-4be9-ae07-ce8dae937e39"),
-       EventTraceLevel.Information,
-       0xFFFFFFFFFFFFFFFF,
-       0))
+using (var trace = new RealTimeTrace("My ETW Trace"))
 using (var parserBuffers = new EventParserBuffers())
 {
     try
     {
+        var provider = trace.AddProvider(
+          new Guid("6ad52b32-d609-4be9-ae07-ce8dae937e39"),
+          EventTraceLevel.Information,
+          0xFFFFFFFFFFFFFFFF,
+          0);
         trace.Start();
 
         //
@@ -199,15 +199,17 @@ See the unit tests defined in `FilterByPackageTests.cs` for details on determini
 
 ### Attribute filtering
 
-The simplest form of attribute filtering is to specify a level and keyword when you start the trace session:
+The simplest form of attribute filtering is to specify a level and keyword to any provider added to the trace session:
 
 ```
-using (var trace = new RealTimeTrace(
-       "My ETW Trace",
-       new Guid("70eb4f03-c1de-4f73-a051-33d13d5413bd"),
-       EventTraceLevel.Information,  << LEVEL
-       0xFFFFFFFFFFFFFFFF,           << ANY KEYWORD
-       0))                           << ALL KEYWORD
+using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
+using (var parserBuffers = new EventParserBuffers())
+{
+    try
+    {
+        var provider = trace.AddProvider(s_RpcEtwGuid, Level, 0xFFFFFFFFFFFFFFFF, 0);
+        trace.Start();
+...
 ```
 
 This is the most powerful form of filtering, as it is extremely efficient and entirely eliminates unnecessary event production. The worst thing you can do when using ETW filtering is to set the level to `Verbose` and either leverage payload filtering or perform your own filtering. You will surely strain the system and cause very noticable impact.  By understanding the logging level and keywords of interest for the events you want to analyze, you can easily set this attribute filter and go unnoticed. Be sure to read the [documentation](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-enabletraceex2) to properly use the `any`/`all` keyword bitmasks.
@@ -216,7 +218,7 @@ The other form of attribute filtering, and also extremely lightweight and effici
 
 ```
 var eventIds = new List<int> { 5, 7 };
-trace.SetEventIdsFilter(eventIds, Enable);
+provider.SetEventIdsFilter(eventIds, Enable);
 ```
 
 ### Stackwalk filtering
@@ -225,13 +227,13 @@ This type of filtering allows you to capture a stack trace of the thread that ca
 
 ```
 var eventIds = new List<int> { 5 };
-trace.SetStackwalkEventIdsFilter(eventIds, Enable);
+provider.SetStackwalkEventIdsFilter(eventIds, Enable);
 ```
 
 To produce a stackwalk trace for _all_ Microsoft-Windows-Kernel-Registry events by keyword and level (note: you must also include the same keyword/level in the trace session constructor `RealTimeTrace`):
 
 ```
-trace.SetStackwalkLevelKw(
+provider.SetStackwalkLevelKw(
     EventTraceLevel.Information,
     RegistryProviderKeywords.CreateKey | RegistryProviderKeywords.QueryKey,
     0,
@@ -260,7 +262,7 @@ var filters = new List<Tuple<PayloadFilter, bool>>
 {
     new Tuple<PayloadFilter, bool>(payloadFilter, false)
 };
-trace.AddPayloadFilters(filters);
+provider.AddPayloadFilters(filters);
 ```
 
 To specify that predicate conditions should be OR'd together, pass `true` to the `PayloadFilter` constructor. To require that all predicates match (AND'd together), pass `false`. ETW does not support any more complicated predicate grouping.

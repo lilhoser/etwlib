@@ -49,17 +49,14 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_WinKernelRegistryGuid,
-                Level,
-                (ulong)MatchAnyKeyword,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
                 {
-                    trace.SetStackwalkLevelKw(Level, (ulong)MatchAnyKeyword, 0, Enable);
+                    var provider = trace.AddProvider(
+                        s_WinKernelRegistryGuid, Level, (ulong)MatchAnyKeyword, 0);
+                    provider.SetStackwalkLevelKw(Level, (ulong)MatchAnyKeyword, 0, Enable);
                     trace.Start();
 
                     //
@@ -107,10 +104,9 @@ namespace UnitTests
                         // Keyword checks
                         //
                         Assert.IsNotNull(parsedEvent.Keywords);
-                        Assert.IsTrue(parsedEvent.Keywords.Count > 0);
-
+                        var keywords = parsedEvent.Keywords.Split(',');
                         int matchedKeywords = 0;
-                        foreach (var kw in parsedEvent.Keywords)
+                        foreach (var kw in keywords)
                         {
                             if (!Enum.TryParse<RegistryProviderKeywords>(kw, true, out var parsed))
                             {

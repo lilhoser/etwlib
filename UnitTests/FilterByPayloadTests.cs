@@ -54,12 +54,7 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_WinKernelRegistryGuid,
-                EventTraceLevel.Information,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
@@ -73,7 +68,10 @@ namespace UnitTests
                     {
                         new Tuple<PayloadFilter, bool>(payloadFilter, false)
                     };
-                    trace.AddPayloadFilters(filters);
+
+                    var provider = trace.AddProvider(
+                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                    provider.AddPayloadFilters(filters);
                     trace.Start();
 
                     //
@@ -214,12 +212,7 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_WinKernelRegistryGuid,
-                EventTraceLevel.Information,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
@@ -234,7 +227,10 @@ namespace UnitTests
                         payloadFilter.AddPredicate(FieldName, Operator, Value);
                         filters.Add(new Tuple<PayloadFilter, bool>(payloadFilter, false));
                     }
-                    trace.AddPayloadFilters(filters);
+
+                    var provider = trace.AddProvider(
+                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                    provider.AddPayloadFilters(filters);
                     trace.Start();
 
                     //
@@ -284,7 +280,7 @@ namespace UnitTests
                         Assert.IsNotNull(value);
                         Assert.IsNotNull(value.Value);
                         var fieldValue = Utilities.StringToInteger(value.Value);
-                        var expectedRange = PayloadFilter.GetBetweenArguments(Value);
+                        var expectedRange = Utilities.GetBetweenArguments(Value);
                         var lower = expectedRange.Item1;
                         var upper = expectedRange.Item2;
 
@@ -359,12 +355,7 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_WinKernelRegistryGuid,
-                EventTraceLevel.Information,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
@@ -379,7 +370,10 @@ namespace UnitTests
                         payloadFilter.AddPredicate(FieldName, Operator, Value);
                         filters.Add(new Tuple<PayloadFilter, bool>(payloadFilter, false));
                     }
-                    trace.AddPayloadFilters(filters);
+
+                    var provider = trace.AddProvider(
+                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                    provider.AddPayloadFilters(filters);
                     trace.Start();
 
                     //
@@ -558,12 +552,7 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_WinKernelRegistryGuid,
-                EventTraceLevel.Information,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
@@ -581,7 +570,10 @@ namespace UnitTests
                         }
                         filters.Add(new Tuple<PayloadFilter, bool>(payloadFilter, false));
                     }
-                    trace.AddPayloadFilters(filters);
+
+                    var provider = trace.AddProvider(
+                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                    provider.AddPayloadFilters(filters);
                     trace.Start();
 
                     //

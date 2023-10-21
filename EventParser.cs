@@ -311,7 +311,7 @@ namespace etwlib
 
                 m_ParsedEvent.Provider.Source =
                     m_Buffers.m_TraceEventInfo.Source.ToString();
-                m_ParsedEvent.Keywords = new List<string>();
+                var keywords = new List<string>();
                 if (m_Buffers.m_TraceEventInfo.KeywordsNameOffset > 0)
                 {
                     for (int offset = m_Buffers.m_TraceEventInfo.KeywordsNameOffset; ;)
@@ -321,9 +321,13 @@ namespace etwlib
                         {
                             break;
                         }
-                        m_ParsedEvent.Keywords.Add(str.Trim());
+                        keywords.Add(str.Trim());
                         offset += Encoding.Unicode.GetByteCount(str) + 2;
                     }
+                }
+                if (keywords.Count > 0)
+                {
+                    m_ParsedEvent.Keywords = string.Join(",", keywords);
                 }
 
                 if (m_Buffers.m_TraceEventInfo.TaskNameOffset > 0)
@@ -403,8 +407,10 @@ namespace etwlib
                     {
                         case EventHeaderExtendedDataType.Sid:
                             {
-                                m_ParsedEvent!.UserSid = new byte[size];
-                                Marshal.Copy(data, m_ParsedEvent.UserSid, 0, size);
+                                var binarySid = new byte[size];
+                                Marshal.Copy(data, binarySid, 0, size);
+                                var sid = new System.Security.Principal.SecurityIdentifier(binarySid, 0);
+                                m_ParsedEvent!.UserSid = sid.ToString();
                                 break;
                             }
                         case EventHeaderExtendedDataType.RelatedActivityId:

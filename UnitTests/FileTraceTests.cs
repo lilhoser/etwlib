@@ -56,6 +56,8 @@ namespace UnitTests
             {
                 try
                 {
+                    trace.Start();
+
                     //
                     // Begin consuming events. This is a blocking call.
                     //

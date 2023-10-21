@@ -32,11 +32,7 @@ namespace etwlib
                 return false;
             }
             var field = Other as ParsedEtwProvider;
-            if (field == null)
-            {
-                return false;
-            }
-            return Equals(Other);
+            return Equals(field);
         }
 
         public bool Equals(ParsedEtwProvider? Other)

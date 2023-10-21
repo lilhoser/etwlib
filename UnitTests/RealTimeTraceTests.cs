@@ -43,16 +43,12 @@ namespace UnitTests
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
-            using (var trace = new RealTimeTrace(
-                "Unit Test Real-Time Tracing",
-                s_RpcEtwGuid,
-                Level,
-                0xFFFFFFFFFFFFFFFF,
-                0))
+            using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
             using (var parserBuffers = new EventParserBuffers())
             {
                 try
                 {
+                    var provider = trace.AddProvider(s_RpcEtwGuid, Level, 0xFFFFFFFFFFFFFFFF, 0);
                     trace.Start();
 
                     //

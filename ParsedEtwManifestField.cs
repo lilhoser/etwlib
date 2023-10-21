@@ -39,11 +39,7 @@ namespace etwlib
                 return false;
             }
             var field = Other as ParsedEtwManifestField;
-            if (field == null)
-            {
-                return false;
-            }
-            return Equals(Other);
+            return Equals(field);
         }
 
         public bool Equals(ParsedEtwManifestField? Other)
