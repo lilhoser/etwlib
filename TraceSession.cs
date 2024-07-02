@@ -58,9 +58,16 @@ namespace etwlib
             GC.SuppressFinalize(this);
         }
 
-        public EnabledProvider AddProvider(Guid Id, EventTraceLevel traceLevel, ulong matchAnyKeyword, ulong matchAllKeyword)
+        public EnabledProvider AddProvider(Guid Id, string Name, byte traceLevel, ulong matchAnyKeyword, ulong matchAllKeyword)
         {
-            var provider = new EnabledProvider(Id, traceLevel, matchAllKeyword, matchAnyKeyword);
+            var provider = new EnabledProvider(Id, Name, traceLevel, matchAllKeyword, matchAnyKeyword);
+            m_EnabledProviders.Add(provider);
+            return provider;
+        }
+
+        public EnabledProvider AddProvider(Guid Id, string Name, EventTraceLevel traceLevel, ulong matchAnyKeyword, ulong matchAllKeyword)
+        {
+            var provider = new EnabledProvider(Id, Name, (byte)traceLevel, matchAllKeyword, matchAnyKeyword);
             m_EnabledProviders.Add(provider);
             return provider;
         }

@@ -53,7 +53,7 @@ namespace UnitTests
                 try
                 {
                     var provider = trace.AddProvider(
-                        s_RpcEtwGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_RpcEtwGuid, "RPC", EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
 
                     //
                     // We'll use RpcClientCallStart_V1 and RpcClientCallStop7_V1
@@ -182,9 +182,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {

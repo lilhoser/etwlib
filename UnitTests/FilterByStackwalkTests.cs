@@ -55,7 +55,7 @@ namespace UnitTests
                 try
                 {
                     var provider = trace.AddProvider(
-                        s_WinKernelRegistryGuid, Level, (ulong)MatchAnyKeyword, 0);
+                        s_WinKernelRegistryGuid, "WinKernelReg", Level, (ulong)MatchAnyKeyword, 0);
                     provider.SetStackwalkLevelKw(Level, (ulong)MatchAnyKeyword, 0, Enable);
                     trace.Start();
 
@@ -175,9 +175,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {

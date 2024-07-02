@@ -52,7 +52,7 @@ namespace UnitTests
                 try
                 {
                     var provider = trace.AddProvider(
-                        s_RpcEtwGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_RpcEtwGuid, "RPC", EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
                     provider.SetFilteredExeName(ExeName);
                     trace.Start();
 
@@ -139,9 +139,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {

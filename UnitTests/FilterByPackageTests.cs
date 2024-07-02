@@ -110,7 +110,7 @@ namespace UnitTests
                 try
                 {
                     var provider = trace.AddProvider(
-                        s_LoggingChannel, EventTraceLevel.Verbose, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_LoggingChannel, "LoggingChannel", EventTraceLevel.Verbose, 0xFFFFFFFFFFFFFFFF, 0);
                     if (TestPackageId)
                     {
                         Assert.IsNotNull(PackageId);
@@ -214,9 +214,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {

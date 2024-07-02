@@ -116,6 +116,7 @@ namespace etwlib
                     //
                     provider.Source = providerInfo.SchemaSource == 0 ? "xml" : "MOF";
                     provider.Name = "(unnamed)";
+                    provider.HasManifest = IsManifestKnown(provider.Id);
 
                     if (providerInfo.ProviderNameOffset != 0)
                     {

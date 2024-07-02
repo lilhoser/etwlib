@@ -48,7 +48,7 @@ namespace UnitTests
             {
                 try
                 {
-                    var provider = trace.AddProvider(s_RpcEtwGuid, Level, 0xFFFFFFFFFFFFFFFF, 0);
+                    var provider = trace.AddProvider(s_RpcEtwGuid, "RPC", Level, 0xFFFFFFFFFFFFFFFF, 0);
                     trace.Start();
 
                     //

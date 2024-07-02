@@ -26,19 +26,21 @@ namespace etwlib
 {
     public class EnabledProvider : IEquatable<EnabledProvider>, IComparable<EnabledProvider>, IDisposable
     {
-        public Guid Id;
-        public EventTraceLevel Level;
-        public ulong AllKeywords;
-        public ulong AnyKeywords;
-        private List<EVENT_FILTER_DESCRIPTOR> m_FilterDescriptors;
-        private nint m_AggregatedPayloadFilters;
-        private bool m_Disposed;
-        private nint m_ParametersBuffer;
-        private nint m_FiltersBuffer;
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public byte Level { get; set; }
+        public ulong AllKeywords { get; set; }
+        public ulong AnyKeywords { get; set; }
+        private List<EVENT_FILTER_DESCRIPTOR> m_FilterDescriptors { get; set; }
+        private nint m_AggregatedPayloadFilters { get; set; }
+        private bool m_Disposed { get; set; }
+        private nint m_ParametersBuffer { get; set; }
+        private nint m_FiltersBuffer { get; set; }
 
-        public EnabledProvider(Guid Id, EventTraceLevel Level, ulong AllKeywords, ulong AnyKeywords)
+        public EnabledProvider(Guid Id, string Name, byte Level, ulong AllKeywords, ulong AnyKeywords)
         {
             this.Id = Id;
+            this.Name = Name;
             this.Level = Level;
             this.AllKeywords = AllKeywords;
             this.AnyKeywords = AnyKeywords;
@@ -162,7 +164,7 @@ namespace etwlib
         public uint Disable(long SessionHandle)
         {
             return EnableTraceEx2(SessionHandle,
-                        ref Id,
+                        Id,
                         EventControlCode.DisableProvider,
                         Level,
                         0, 0, 0,
@@ -174,7 +176,7 @@ namespace etwlib
             GenerateTraceParameters();
             return EnableTraceEx2(
                     SessionHandle,
-                    ref Id,
+                    Id,
                     EventControlCode.EnableProvider,
                     Level,
                     AnyKeywords,
@@ -417,7 +419,7 @@ namespace etwlib
             }
 
             var filter = new EVENT_FILTER_LEVEL_KW();
-            filter.Level = Level;
+            filter.Level = (byte)Level;
             filter.MatchAllKeyword = MatchAllKeyword;
             filter.MatchAnyKeyword = MatchAnyKeyword;
             filter.FilterIn = FilterIn;

@@ -21,9 +21,12 @@ namespace etwlib
 {
     public class ParsedEtwProvider : IEquatable<ParsedEtwProvider>, IComparable<ParsedEtwProvider>
     {
-        public Guid Id;
-        public string? Name;
-        public string? Source;
+        public Guid Id { get; set; }
+        public string? Name { get; set; }
+        public string? Source { get; set; }
+        public bool HasManifest { get; set; }
+
+        public ParsedEtwProvider() { } // For XML serialization
 
         public override bool Equals(object? Other)
         {
@@ -79,7 +82,7 @@ namespace etwlib
         public override string ToString()
         {
             var name = string.IsNullOrEmpty(Name) ? Id.ToString() : Name;
-            return $"{name} : ({Id}/{Source})";
+            return $"{name} : ({Id}/{Source}/Manifest={(HasManifest? "yes" : "no")})";
         }
     }
 }

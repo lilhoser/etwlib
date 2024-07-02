@@ -70,7 +70,7 @@ namespace UnitTests
                     };
 
                     var provider = trace.AddProvider(
-                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_WinKernelRegistryGuid, "WinKernelReg", EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
                     provider.AddPayloadFilters(filters);
                     trace.Start();
 
@@ -181,9 +181,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -229,7 +229,7 @@ namespace UnitTests
                     }
 
                     var provider = trace.AddProvider(
-                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_WinKernelRegistryGuid, "WinKernelReg", EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
                     provider.AddPayloadFilters(filters);
                     trace.Start();
 
@@ -323,9 +323,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -372,7 +372,7 @@ namespace UnitTests
                     }
 
                     var provider = trace.AddProvider(
-                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_WinKernelRegistryGuid, "WinKernelReg", EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
                     provider.AddPayloadFilters(filters);
                     trace.Start();
 
@@ -481,9 +481,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -572,7 +572,7 @@ namespace UnitTests
                     }
 
                     var provider = trace.AddProvider(
-                        s_WinKernelRegistryGuid, EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_WinKernelRegistryGuid, "WinKernelReg", EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
                     provider.AddPayloadFilters(filters);
                     trace.Start();
 
@@ -696,9 +696,9 @@ namespace UnitTests
                         return 1;
                     }));
                 }
-                catch (AssertFailedException ex)
+                catch (AssertFailedException)
                 {
-                    throw ex;
+                    throw;
                 }
                 catch (Exception ex)
                 {

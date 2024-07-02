@@ -58,7 +58,7 @@ namespace UnitTests
                         p => p.Id).Take(ProcessCount).ToList();
                     Debug.Assert(targets.Count > 0);
                     var provider = trace.AddProvider(
-                        s_RpcEtwGuid, EventTraceLevel.LogAlways, 0xFFFFFFFFFFFFFFFF, 0);
+                        s_RpcEtwGuid, "RPC", EventTraceLevel.LogAlways, 0xFFFFFFFFFFFFFFFF, 0);
                     provider.SetProcessFilter(targets);
                     trace.Start();
 

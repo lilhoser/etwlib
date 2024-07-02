@@ -23,14 +23,14 @@ namespace etwlib
 {
     public class ParsedEtwManifest
     {
-        public ParsedEtwProvider Provider;
-        public List<ParsedEtwManifestEvent> Events;
-        public List<ParsedEtwManifestField> Channels;
-        public List<ParsedEtwManifestField> Keywords;
-        public Dictionary<ParsedEtwManifestField, List<ParsedEtwManifestField>> Tasks;
-        public List<ParsedEtwManifestField> GlobalOpcodes;
-        public Dictionary<string, List<ParsedEtwTemplateItem>> Templates;
-        public List<string> StringTable;
+        public ParsedEtwProvider Provider { get; set; }
+        public List<ParsedEtwManifestEvent> Events { get; set; }
+        public List<ParsedEtwManifestField> Channels { get; set; }
+        public List<ParsedEtwManifestField> Keywords { get; set; }
+        public Dictionary<ParsedEtwManifestField, List<ParsedEtwManifestField>> Tasks { get; set; }
+        public List<ParsedEtwManifestField> GlobalOpcodes { get; set; }
+        public Dictionary<string, List<ParsedEtwTemplateItem>> Templates { get; set; }
+        public List<string> StringTable { get; set; }
 
         public ParsedEtwManifest()
         {

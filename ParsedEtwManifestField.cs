@@ -21,9 +21,11 @@ namespace etwlib
 {
     public class ParsedEtwManifestField : IEquatable<ParsedEtwManifestField>, IComparable<ParsedEtwManifestField>
     {
-        public string Name;
-        public string Description;
-        public ulong Value;
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public ulong Value { get; set; }
+
+        private ParsedEtwManifestField() { } // For XML serialization
 
         public ParsedEtwManifestField(string name, string description, ulong value)
         {

@@ -199,7 +199,8 @@ namespace etwlib
                         pointer, typeof(TRACE_PROVIDER_INSTANCE_INFO))!;
                     if (instance.EnableCount > 0)
                     {
-                        var sessionPointer = pointer;
+                        var sessionPointer = nint.Add(pointer, Marshal.SizeOf(
+                            typeof(TRACE_PROVIDER_INSTANCE_INFO)));
                         for (int j = 0; j < instance.EnableCount; j++)
                         {
                             var sessionInfo = (TRACE_ENABLE_INFO)Marshal.PtrToStructure(
@@ -225,6 +226,16 @@ namespace etwlib
                             sessionPointer = nint.Add(sessionPointer,
                                 Marshal.SizeOf(typeof(TRACE_ENABLE_INFO)));
                         }
+                    }
+                    if (instance.NextOffset == 0)
+                    {
+                        //
+                        // The docs aren't clear. They state that if this value is 0,
+                        // there are no more instances, but logically that should not
+                        // ever be the case, as we're guided by the parent struct's
+                        // InstanceCount which should always be accurate..
+                        //
+                        break;
                     }
                     pointer = nint.Add(pointer, (int)instance.NextOffset);
                 }

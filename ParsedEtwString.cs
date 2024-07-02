@@ -21,8 +21,10 @@ namespace etwlib
 {
     public class ParsedEtwString : IEquatable<ParsedEtwString>, IComparable<ParsedEtwString>
     {
-        public string Name;
-        public ulong Value;
+        public string Name { get; set; }
+        public ulong Value { get; set; }
+
+        private ParsedEtwString() { } // For XML serialization
 
         public ParsedEtwString(string name, ulong value)
         {

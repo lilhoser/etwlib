@@ -21,14 +21,16 @@ namespace etwlib
 {
     public class ParsedEtwManifestEvent : IEquatable<ParsedEtwManifestEvent>, IComparable<ParsedEtwManifestEvent>
     {
-        public string Id;
-        public string Version;
-        public string? Opcode;
-        public string? Channel;
-        public string Level;
-        public string? Keywords;
-        public string Task;
-        public string? Template;
+        public string Id { get; set; }
+        public string Version { get; set; }
+        public string? Opcode { get; set; }
+        public string? Channel { get; set; }
+        public string Level { get; set; }
+        public string? Keywords { get; set; }
+        public string Task { get; set; }
+        public string? Template { get; set; }
+
+        private ParsedEtwManifestEvent() { } // For XML serialization
 
         public ParsedEtwManifestEvent(
             string id,

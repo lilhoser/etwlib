@@ -24,19 +24,20 @@ namespace etwlib
 
     public class SessionEnabledProvider
     {
-        public Guid ProviderId;
-        public uint ProcessId;
-        public TRACE_PROVIDER_INSTANCE_FLAGS InstanceFlags;
-        public EventTraceLevel Level;
-        public EnableTraceProperties EnableProperty;
-        public ulong MatchAnyKeyword;
-        public ulong MatchAllKeyword;
+        public Guid ProviderId { get; set; }
+        public uint ProcessId { get; set; }
+        public TRACE_PROVIDER_INSTANCE_FLAGS InstanceFlags { get; set; }
+        public byte Level { get; set; }
+        public EnableTraceProperties EnableProperty { get; set; }
+        public ulong MatchAnyKeyword { get; set; }
+        public ulong MatchAllKeyword { get; set; }
 
+        private SessionEnabledProvider() { } // For XML serialization
         public SessionEnabledProvider(
             Guid providerId,
             uint processId,
             TRACE_PROVIDER_INSTANCE_FLAGS instanceFlags,
-            EventTraceLevel level,
+            byte level,
             EnableTraceProperties enableProperty,
             ulong matchAnyKeyword,
             ulong matchAllKeyword)
@@ -65,8 +66,14 @@ namespace etwlib
 
     public class ParsedEtwSession : IEquatable<ParsedEtwSession>, IComparable<ParsedEtwSession>
     {
-        public ushort LoggerId;
-        public List<SessionEnabledProvider> EnabledProviders;
+        public ushort LoggerId { get; set; }
+        public List<SessionEnabledProvider> EnabledProviders { get; set; }
+
+        private ParsedEtwSession() // For xml serialization
+        {
+            LoggerId = 0;
+            EnabledProviders = new List<SessionEnabledProvider>();
+        }
 
         public ParsedEtwSession(ushort Id)
         {

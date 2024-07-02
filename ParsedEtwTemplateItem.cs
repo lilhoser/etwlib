@@ -30,18 +30,20 @@ namespace etwlib
                 FieldIndex = Index;
                 IsCountedField = IsCounted;
             }
-            public string? FieldName;    // must be resolved
-            public int FieldIndex;      // match to ParsedEtwTemplateItem.Index
-            public bool IsCountedField; // if false, size field
+            public string? FieldName { get; set; }    // must be resolved
+            public int FieldIndex { get; set; }      // match to ParsedEtwTemplateItem.Index
+            public bool IsCountedField { get; set; } // if false, size field
         }
 
-        public string Name;
-        public TdhInputType InType;
-        public TdhOutputType OutType;
-        public int Length;
-        public string Value;
-        public Backreference? FieldBackreference;
-        public int Index; // the index when it was parsed
+        public string Name { get; set; }
+        public TdhInputType InType { get; set; }
+        public TdhOutputType OutType { get; set; }
+        public int Length { get; set; }
+        public string Value { get; set; }
+        public Backreference? FieldBackreference { get; set; }
+        public int Index { get; set; } // the index when it was parsed
+
+        private ParsedEtwTemplateItem() { } // For XML serialization
 
         public ParsedEtwTemplateItem(
             string name,

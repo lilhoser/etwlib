@@ -357,7 +357,7 @@ namespace etwlib
         {
             public ulong MatchAnyKeyword;
             public ulong MatchAllKeyword;
-            public EventTraceLevel Level;
+            public byte Level;
             [MarshalAs(UnmanagedType.U1)]
             public bool FilterIn;
         }
@@ -385,7 +385,7 @@ namespace etwlib
         public struct TRACE_ENABLE_INFO
         {
             public uint IsEnabled;
-            public EventTraceLevel Level;
+            public byte Level;
             public byte Reserved1;
             public ushort LoggerId;
             public EnableTraceProperties EnableProperty;
@@ -432,9 +432,9 @@ namespace etwlib
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern uint EnableTraceEx2(
           [In] long SessionHandle,
-          [In] ref Guid ProviderId,
+          [In] Guid ProviderId,
           [In] EventControlCode ControlCode,
-          [In] EventTraceLevel Level,
+          [In] byte Level,
           [In] ulong MatchAnyKeyword,
           [In] ulong MatchAllKeyword,
           [In] uint Timeout,
@@ -649,7 +649,7 @@ namespace etwlib
             public ushort Id;
             public byte Version;
             public byte Channel;
-            public NativeTraceControl.EventTraceLevel Level;
+            public byte Level;
             public byte Opcode;
             public ushort Task;
             public ulong Keyword;
@@ -671,7 +671,7 @@ namespace etwlib
             public ushort Size;
             public ushort FieldTypeFlags;
             public byte Type;
-            public NativeTraceControl.EventTraceLevel Level;
+            public byte Level;
             public ushort Version;
             public uint ThreadId;
             public uint ProcessId;
