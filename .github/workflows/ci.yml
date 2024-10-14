@@ -6,14 +6,14 @@ jobs:
     steps:
       # setup .NET using setup-dotnet action
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3.0.3
+        uses: actions/setup-dotnet@v4
       - name: checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@v2
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v1
-      - uses: actions/cache@v3
+        uses: nuget/setup-nuget@v2
+      - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -25,4 +25,4 @@ jobs:
         run: |
           msbuild.exe etwlib.sln /nologo /nr:false /p:platform="Any CPU" /p:configuration="Release"
       - name: Test
-        run: sudo dotnet test --no-restore --verbosity normal
+        run: dotnet test --no-restore --verbosity normal

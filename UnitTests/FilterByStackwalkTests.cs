@@ -56,7 +56,7 @@ namespace UnitTests
                 {
                     var provider = trace.AddProvider(
                         s_WinKernelRegistryGuid, "WinKernelReg", Level, (ulong)MatchAnyKeyword, 0);
-                    provider.SetStackwalkLevelKw(Level, (ulong)MatchAnyKeyword, 0, Enable);
+                    provider.SetStackwalkLevelKw((byte)Level, (ulong)MatchAnyKeyword, 0, Enable);
                     trace.Start();
 
                     //

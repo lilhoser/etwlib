@@ -163,6 +163,7 @@ namespace etwlib
         {
             var parsedManifest = new ParsedEtwManifest();
             var fieldResults = new List<ParsedEtwManifestField>();
+            var manifestLoaded = false;
 
             //
             // If a manifest location was provided, ask TDH to load it.
@@ -172,6 +173,7 @@ namespace etwlib
                 try
                 {
                     LoadProviderManifest(ManifestLocation);
+                    manifestLoaded = true;
                 }
                 catch (Exception ex)
                 {
@@ -492,13 +494,17 @@ namespace etwlib
             parsedManifest.StringTable = parsedManifest.StringTable.Distinct().ToList();
             parsedManifest.StringTable.Sort();
 
+            if (manifestLoaded)
+            {
+                _ = TdhUnloadManifest(ManifestLocation);
+            }
             return parsedManifest;
         }
 
         public
         static
         Dictionary<ParsedEtwProvider, ParsedEtwManifest>
-        GetManifests()
+        GetManifests(int Limit = 0)
         {
             var results = new Dictionary<ParsedEtwProvider, ParsedEtwManifest>();
             var providers = GetProviders();
@@ -506,6 +512,13 @@ namespace etwlib
             {
                 try
                 {
+                    if (Limit > 0 && results.Count >= Limit)
+                    {
+                        Trace(TraceLoggerType.EtwProviderParser,
+                              TraceEventType.Verbose,
+                              $"Processed {Limit} providers, stopping.");
+                        break;
+                    }
                     if (results.ContainsKey(provider))
                     {
                         //

@@ -399,7 +399,7 @@ namespace etwlib
             m_FilterDescriptors.Add(descriptor);
         }
 
-        public void SetStackwalkLevelKw(EventTraceLevel Level, ulong MatchAnyKeyword, ulong MatchAllKeyword, bool FilterIn)
+        public void SetStackwalkLevelKw(byte Level, ulong MatchAnyKeyword, ulong MatchAllKeyword, bool FilterIn)
         {
             foreach (var desc in m_FilterDescriptors)
             {
@@ -419,7 +419,7 @@ namespace etwlib
             }
 
             var filter = new EVENT_FILTER_LEVEL_KW();
-            filter.Level = (byte)Level;
+            filter.Level = Level;
             filter.MatchAllKeyword = MatchAllKeyword;
             filter.MatchAnyKeyword = MatchAnyKeyword;
             filter.FilterIn = FilterIn;

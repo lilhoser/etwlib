@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Runtime.InteropServices;
 using etwlib;
+using System.Threading.Tasks;
 
 namespace UnitTests
 {
@@ -98,6 +99,93 @@ namespace UnitTests
                     Assert.Fail($"An exception occurred when consuming events: {ex.Message}");
                 }
             }
-        }   
+        }
+
+        [DataTestMethod]
+        [DataRow(EventTraceLevel.Information)]
+        [DataRow(EventTraceLevel.LogAlways)]
+        public void BasicStartStop(EventTraceLevel Level)
+        {
+            int eventsConsumed = 0;
+
+            ConfigureLoggers();
+
+            var trace = new RealTimeTrace("Unit Test Real-Time Tracing");
+
+            //
+            // Start a task to initiate a trace with no stop condition.
+            //
+            Task.Run(() =>
+            {
+                using (var parserBuffers = new EventParserBuffers())
+                {
+                    try
+                    {
+                        var provider = trace.AddProvider(s_RpcEtwGuid, "RPC", Level, 0xFFFFFFFFFFFFFFFF, 0);
+                        trace.Start();
+
+                        //
+                        // Begin consuming events. This is a blocking call.
+                        //
+                        trace.Consume(new EventRecordCallback((Event) =>
+                        {
+                            var evt = (EVENT_RECORD)Marshal.PtrToStructure(
+                                    Event, typeof(EVENT_RECORD))!;
+
+                            var parser = new EventParser(
+                                evt,
+                                parserBuffers,
+                                trace.GetPerfFreq());
+                            try
+                            {
+                                var result = parser.Parse();
+                                Assert.IsNotNull(result);
+                            }
+                            catch (Exception ex)
+                            {
+                                Assert.Fail($"Unable to parse event: {ex.Message}");
+                            }
+                            eventsConsumed++;
+                        }),
+                        new BufferCallback((LogFile) =>
+                        {
+                            var logfile = new EVENT_TRACE_LOGFILE();
+                            try
+                            {
+                                logfile = (EVENT_TRACE_LOGFILE)
+                                    Marshal.PtrToStructure(LogFile, typeof(EVENT_TRACE_LOGFILE))!;
+                            }
+                            catch (Exception ex)
+                            {
+                                Assert.Fail($"Unable to cast EVENT_TRACE_LOGFILE: {ex.Message}");
+                            }
+                            return 1;
+                        }));
+                    }
+                    catch (Exception ex)
+                    {
+                        Assert.Fail($"An exception occurred when consuming events: {ex.Message}");
+                    }
+                }
+            });
+
+            //
+            // Start a task to stop the trace.
+            //
+            Task.Run(() =>
+            {
+                using (var trace = new RealTimeTrace("Unit Test Real-Time Tracing"))
+                {
+                    try
+                    {
+                        trace.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        Assert.Fail($"An exception occurred when consuming events: {ex.Message}");
+                    }
+                }
+            });
+        }
     }
 }

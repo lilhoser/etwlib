@@ -112,7 +112,45 @@ namespace etwlib
         public override string ToString()
         {
             return $"Id={Id}, Version={Version}, Task={Task}, Opcode={Opcode}, " +
-                   $"Channel={Channel}, Level={Level}, Keywords={Keywords}";
+                   $"Channel={Channel}, Level={Level}, Keywords={Keywords}, Template={Template}";
+        }
+
+        public static ParsedEtwManifestEvent? FromString(string Value)
+        {
+            var values = Value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (values.Length != 8)
+            {
+                return null;
+            }
+            var dict = new Dictionary<string, string>();
+            foreach (var v in values)
+            {
+                var kvp = v.Split('=', StringSplitOptions.RemoveEmptyEntries);
+                if (kvp.Length < 1)
+                {
+                    return null;
+                }
+                var key = kvp[0];
+                var val = string.Empty;
+                if (kvp.Length == 2)
+                {
+                    val = kvp[1];
+                }
+                if (dict.ContainsKey(key))
+                {
+                    return null;
+                }
+                dict.Add(key, val);
+            }
+            return new ParsedEtwManifestEvent(
+                dict["Id"],
+                dict["Version"],
+                dict["Opcode"],
+                dict["Channel"],
+                dict["Level"],
+                dict["Keywords"],
+                dict["Task"],
+                dict["Template"]);
         }
     }
 }

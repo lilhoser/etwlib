@@ -34,12 +34,12 @@ namespace etwlib
         private nint m_PropertiesBuffer;
         private long m_SessionHandle;
 
-        public RealTimeTrace(string SessionName)
+        public RealTimeTrace(string SessionName) : base()
         {
             m_SessionName = SessionName;
             m_SessionGuid = Guid.NewGuid();
             m_PropertiesBuffer = nint.Zero;
-            m_SessionHandle = 0;
+            m_SessionHandle = nint.Zero;
             m_LogFile.LoggerName = m_SessionName;
             m_LogFile.ProcessTraceMode = ProcessTraceMode.EventRecord | ProcessTraceMode.RealTime;
         }
@@ -60,33 +60,7 @@ namespace etwlib
                 TraceEventType.Information,
                 "Disposing RealTimeTrace");
 
-            if (m_SessionHandle != 0 && m_SessionHandle != -1)
-            {
-                uint result;
-                foreach (var provider in m_EnabledProviders)
-                {
-                    result = provider.Disable(m_SessionHandle);
-                    if (result != ERROR_SUCCESS)
-                    {
-                        Trace(TraceLoggerType.RealTimeTrace,
-                              TraceEventType.Error,
-                              $"RealTimeTrace dispose could not disable provider: " +
-                              $"{result:X}");
-                    }
-                }
-                result = ControlTrace(
-                    m_SessionHandle,
-                    m_SessionName,
-                    m_PropertiesBuffer,
-                    ControlCode.Stop);
-                if (result != ERROR_SUCCESS)
-                {
-                    Trace(TraceLoggerType.RealTimeTrace,
-                          TraceEventType.Error,
-                          $"RealTimeTrace dispose could not stop trace: " +
-                          $"{result:X}");
-                }
-            }
+            Stop();
 
             if (m_PropertiesBuffer != nint.Zero)
             {
@@ -181,6 +155,64 @@ namespace etwlib
                       TraceEventType.Information,
                       $"Provider {provider} enabled successfully.");
             }
+        }
+
+        public override void Stop()
+        {
+            if (m_SessionHandle != 0 && m_SessionHandle != -1)
+            {
+                Trace(TraceLoggerType.RealTimeTrace,
+                      TraceEventType.Information,
+                      $"Stopping RealTimeTrace {m_SessionName}...");
+                uint result;
+                foreach (var provider in m_EnabledProviders)
+                {
+                    result = provider.Disable(m_SessionHandle);
+                    if (result != ERROR_SUCCESS)
+                    {
+                        Trace(TraceLoggerType.RealTimeTrace,
+                              TraceEventType.Error,
+                              $"RealTimeTrace dispose could not disable provider: " +
+                              $"{result:X}");
+                    }
+                }
+                result = ControlTrace(
+                    m_SessionHandle,
+                    m_SessionName,
+                    m_PropertiesBuffer,
+                    ControlCode.Stop);
+                if (result != ERROR_SUCCESS)
+                {
+                    Trace(TraceLoggerType.RealTimeTrace,
+                          TraceEventType.Error,
+                          $"RealTimeTrace dispose could not stop trace: " +
+                          $"{result:X}");
+                }
+            }
+        }
+
+        public static long Open(string Name)
+        {
+            EVENT_TRACE_LOGFILE logfile = new EVENT_TRACE_LOGFILE();
+            logfile.LoggerName = Name;
+            logfile.ProcessTraceMode = ProcessTraceMode.EventRecord | ProcessTraceMode.RealTime;
+            Trace(TraceLoggerType.RealTimeTrace,
+                  TraceEventType.Information,
+                  $"Opening existing RealTimeTrace {Name}...");
+            var logFilePointer = Marshal.AllocHGlobal(Marshal.SizeOf(logfile));
+            Marshal.StructureToPtr(logfile, logFilePointer, false);
+            var handle = OpenTrace(logFilePointer);
+            Marshal.FreeHGlobal(logFilePointer);
+            if (handle == -1 || handle == 0)
+            {
+                var error = "OpenTrace() returned an invalid handle:  0x" +
+                    Marshal.GetLastWin32Error().ToString("X");
+                Trace(TraceLoggerType.TraceSession,
+                      TraceEventType.Error,
+                      error);
+                throw new Exception(error);
+            }
+            return handle;
         }
 
         private

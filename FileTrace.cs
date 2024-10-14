@@ -38,9 +38,23 @@ namespace etwlib
 
         public override void Start()
         {
+            //
+            // A FileTrace opens an existing ETL, so there is no start operation.
+            //
             Trace(TraceLoggerType.FileTrace,
                   TraceEventType.Information,
                   $"Starting FileTrace for log {m_LogFile.LogFileName}");
+            return;
+        }
+
+        public override void Stop()
+        {
+            //
+            // A FileTrace opens an existing ETL, so there is no stop operation.
+            //
+            Trace(TraceLoggerType.FileTrace,
+                  TraceEventType.Information,
+                  $"Stopping FileTrace for log {m_LogFile.LogFileName}");
             return;
         }
     }
