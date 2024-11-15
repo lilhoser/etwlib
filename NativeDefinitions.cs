@@ -998,9 +998,11 @@ namespace etwlib
         public const int ERROR_NOT_FOUND = 1168;
         public const int ERROR_XML_PARSE_ERROR = 1465;
         public const int ERROR_RESOURCE_TYPE_NOT_FOUND = 1813;
+        public const int ERROR_RESOURCE_NOT_PRESENT = 4316;
         public const int ERROR_WMI_GUID_NOT_FOUND = 4200;
         public const int ERROR_EMPTY = 4306;
         public const int ERROR_EVT_INVALID_EVENT_DATA = 15005;
         public const int ERROR_MUI_FILE_NOT_FOUND = 15100;
+        public const int ERROR_MUI_FILE_NOT_LOADED = 15105;
     }
 }

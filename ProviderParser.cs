@@ -642,6 +642,8 @@ namespace etwlib
                         case ERROR_FILE_NOT_FOUND:
                         case ERROR_RESOURCE_TYPE_NOT_FOUND:
                         case ERROR_MUI_FILE_NOT_FOUND:
+                        case ERROR_RESOURCE_NOT_PRESENT:
+                        case ERROR_MUI_FILE_NOT_LOADED:
                         {
                             //
                             // We throw this exception here because it's our first chance
