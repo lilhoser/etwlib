@@ -25,6 +25,8 @@ namespace etwlib
     {
         public class Backreference
         {
+            public Backreference() { } // for serialization
+
             public Backreference(int Index, bool IsCounted)
             {
                 FieldIndex = Index;
