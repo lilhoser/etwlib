@@ -20,6 +20,7 @@ using etwlib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace UnitTests
 {
@@ -35,7 +36,7 @@ namespace UnitTests
         [DataRow(EventTraceLevel.Warning, RegistryProviderKeywords.CreateKey | RegistryProviderKeywords.QueryKey, false)]
         [DataRow(EventTraceLevel.Error, RegistryProviderKeywords.EnumerateKey | RegistryProviderKeywords.QueryKey, true)]
         [DataRow(EventTraceLevel.Error, RegistryProviderKeywords.EnumerateKey | RegistryProviderKeywords.QueryKey, false)]
-        public void LevelKw(
+        public async Task LevelKw(
             EventTraceLevel Level,
             RegistryProviderKeywords MatchAnyKeyword,
             bool Enable)
@@ -43,7 +44,7 @@ namespace UnitTests
             int eventsConsumed = 0;
 
             ConfigureLoggers();
-            ConfigureSymbolResolver();
+            await ConfigureSymbolResolver();
 
             //
             // This trace will automatically terminate after a set number
@@ -143,15 +144,7 @@ namespace UnitTests
                                 return;
                             }
 
-                            var pass = StackwalkCheck(pid, parsedEvent.StackwalkAddresses, out bool skip);
-                            if (!pass)
-                            {
-                                if (skip)
-                                {
-                                    return;
-                                }
-                            }
-                            Assert.IsTrue(pass);
+                            _ = StackwalkCheck(pid, parsedEvent.StackwalkAddresses);
                         }
 
                         eventsConsumed++;

@@ -36,7 +36,7 @@ namespace UnitTests
 
 
         [TestMethod]
-        [DeploymentItem(@"..\..\..\..\data\trace_files\ms-rpc-capture-arrays.etl")]
+        [DeploymentItem(@"..\..\..\data\trace_files\ms-rpc-capture-arrays.etl")]
         public void Basic()
         {
             int eventsConsumed = 0;

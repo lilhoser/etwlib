@@ -21,7 +21,7 @@ using symbolresolver;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace UnitTests
 {
@@ -46,7 +46,6 @@ namespace UnitTests
         public static readonly string s_DbgHelpLocation = @"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\dbghelp.dll";
         public static readonly string s_SymbolPath = @"srv*c:\symbols*https://msdl.microsoft.com/download/symbols";
         public static SymbolResolver s_Resolver = new SymbolResolver(s_SymbolPath, s_DbgHelpLocation);
-        public static List<int> s_InitializedPids = new List<int>();
         private static bool s_Initialized = false;
 
         public static void ConfigureLoggers()
@@ -57,7 +56,7 @@ namespace UnitTests
             symbolresolver.TraceLogger.SetLevel(SourceLevels.Error);
         }
 
-        public static void ConfigureSymbolResolver()
+        public static async Task ConfigureSymbolResolver()
         {
             if (s_Initialized)
             {
@@ -66,7 +65,7 @@ namespace UnitTests
 
             try
             {
-                s_Resolver.Initialize();
+                Assert.IsTrue(await s_Resolver.Initialize());
                 s_Initialized = true;
             }
             catch (Exception ex)
@@ -75,54 +74,39 @@ namespace UnitTests
             }
         }
 
-        public static bool StackwalkCheck(int ProcessId, List<ulong> StackwalkAddresses, out bool Skip)
+        public static async Task StackwalkCheck(int ProcessId, List<ulong> StackwalkAddresses)
         {
-            Skip = false;
-
             //
             // Note: pid re-use could (rarely) cause us to miss importing symbol
             // information for loaded modules in the reused process.
             //
-            if (!s_InitializedPids.Contains(ProcessId))
+            try
             {
-                try
+                foreach (var address in StackwalkAddresses)
                 {
-                    s_Resolver.InitializeForProcess(ProcessId);
-                    s_InitializedPids.Add(ProcessId);
-                }
-                catch (Exception)
-                {
+                    var resolved = await s_Resolver.ResolveUserAddress(
+                        ProcessId, address, SymbolFormattingOption.SymbolAndModule);
+                    Assert.IsNotNull(resolved);
                     //
-                    // The process could have died, become frozen (UWP), loaded or
-                    // unload a module, etc etc etc.
+                    // Stackwalk captures for user mode modules vs km modules will differ,
+                    // and this is really just a best-guess.
                     //
-                    Skip = true;
-                    return false;
+                    var found = resolved.Contains("EtwEventWriteTransfer") ||
+                           resolved.Contains("NtTraceEvent") ||
+                           resolved.Contains("EtwEventWrite") ||
+                           resolved.Contains("ZwTraceEvent") ||
+                           resolved.Contains("rpcrt4") ||
+                           resolved.Contains("ntoskrnl") ||
+                           resolved.Contains("ntkrnlpa") ||
+                           resolved.Contains("ntkrnlmp") ||
+                           resolved.Contains("ntkrpamp");
+                    Assert.IsTrue(found);
                 }
             }
-
-            var sb = new StringBuilder();
-            foreach (var address in StackwalkAddresses)
+            catch (InvalidOperationException ex)
             {
-                var result = s_Resolver.GetFormattedSymbol(address);
-                sb.AppendLine(result);
+                Assert.Fail($"SymbolResolver exception: {ex.Message}");
             }
-
-            var final = sb.ToString();
-
-            //
-            // Stackwalk captures for user mode modules vs km modules will differ,
-            // and this is really just a best-guess.
-            //
-            var found = final.Contains("EtwEventWriteTransfer") ||
-                   final.Contains("ZwTraceEvent") ||
-                   final.Contains("rpcrt4") ||
-                   final.Contains("ntoskrnl") ||
-                   final.Contains("ntkrnlpa") ||
-                   final.Contains("ntkrnlmp") ||
-                   final.Contains("ntkrpamp");
-            Debug.Assert(found);
-            return found;
         }
     }
 }

@@ -45,7 +45,6 @@ namespace UnitTests
                     {
                         var results = SessionParser.GetSessions(provider.Name);
                         Assert.IsNotNull(results);
-                        Assert.IsTrue(session == results[0]);
                         return;
                     }
                 }

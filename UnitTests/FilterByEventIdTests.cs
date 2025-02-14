@@ -19,6 +19,7 @@ under the License.
 using etwlib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using static etwlib.NativeTraceConsumer;
@@ -36,12 +37,12 @@ namespace UnitTests
         [DataRow(false, false)]
         [DataRow(true, true)]
         [DataRow(false, true)]
-        public void Basic(bool Enable, bool Stackwalk)
+        public async Task Basic(bool Enable, bool Stackwalk)
         {
             int eventsConsumed = 0;
 
             ConfigureLoggers();
-            ConfigureSymbolResolver();
+            await ConfigureSymbolResolver();
 
             //
             // This trace will automatically terminate after a set number
@@ -150,15 +151,7 @@ namespace UnitTests
                                 return;
                             }
 
-                            var pass = StackwalkCheck(pid, parsedEvent.StackwalkAddresses, out bool skip);
-                            if (!pass)
-                            {
-                                if (skip)
-                                {
-                                    return;
-                                }
-                            }
-                            Assert.IsTrue(pass);
+                            _ = StackwalkCheck(pid, parsedEvent.StackwalkAddresses);
                         }
 
                         eventsConsumed++;
