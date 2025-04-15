@@ -114,9 +114,11 @@ namespace etwlib
 
         public override string ToString()
         {
-            var length = Length > 0 ? $", Length={Length}" : "";
-            var value = string.IsNullOrEmpty(Value) ? $", Value={Value}" : "";
-            return $"{Name} : InType={InType}, OutType={OutType}{length}{value}";
+            if (!string.IsNullOrEmpty(Value))
+            {
+                return $"{Name} = {Value}";
+            }
+            return string.Empty;
         }
     }
 }

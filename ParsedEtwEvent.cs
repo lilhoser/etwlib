@@ -72,7 +72,11 @@ namespace etwlib
             {
                 foreach (var item in TemplateData)
                 {
-                    sb.AppendLine($"   {item}");
+                    var str = item.ToString();
+                    if (!string.IsNullOrEmpty(str))
+                    {
+                        sb.AppendLine($"   {str}");
+                    }
                 }
             }
             return sb.ToString();
