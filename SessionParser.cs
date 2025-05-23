@@ -65,6 +65,10 @@ namespace etwlib
                         throw new Exception(error);
                     }
 
+                    if (Utilities.IsBufferSizeTooLarge(returnLength))
+                    {
+                        throw new Exception($"Requested buffer size {returnLength} is too large for allocation.");
+                    }
                     buffer = Marshal.AllocHGlobal((int)returnLength);
                     bufferSize = returnLength;
                     if (buffer == nint.Zero)
@@ -126,6 +130,10 @@ namespace etwlib
         public static List<ParsedEtwSession>? GetSessions(Guid ProviderId)
         {
             var inBufferSize = (uint)Marshal.SizeOf(typeof(Guid));
+            if (Utilities.IsBufferSizeTooLarge(inBufferSize))
+            {
+                throw new Exception($"Requested buffer size {inBufferSize} is too large for allocation.");
+            }
             var inBuffer = Marshal.AllocHGlobal((int)inBufferSize);
             if (inBuffer == nint.Zero)
             {
@@ -170,6 +178,10 @@ namespace etwlib
                         throw new Exception(error);
                     }
 
+                    if (Utilities.IsBufferSizeTooLarge(returnLength))
+                    {
+                        throw new Exception($"Requested buffer size {returnLength} is too large for allocation.");
+                    }
                     outBuffer = Marshal.AllocHGlobal((int)returnLength);
                     outBufferSize = returnLength;
                     if (outBuffer == nint.Zero)

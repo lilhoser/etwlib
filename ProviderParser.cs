@@ -76,6 +76,11 @@ namespace etwlib
                     throw new Exception(error);
                 }
 
+                if (Utilities.IsBufferSizeTooLarge(bufferSize))
+                {
+                    throw new Exception($"Requested buffer size {bufferSize} is too large for allocation.");
+                }
+
                 buffer = Marshal.AllocHGlobal((int)bufferSize);
                 if (buffer == nint.Zero)
                 {
@@ -608,6 +613,10 @@ namespace etwlib
                         ref bufferSize);
                     if (status == ERROR_INSUFFICIENT_BUFFER)
                     {
+                        if (Utilities.IsBufferSizeTooLarge(bufferSize))
+                        {
+                            throw new Exception($"Requested buffer size {bufferSize} is too large for allocation.");
+                        }
                         buffer = Marshal.AllocHGlobal((int)bufferSize);
                         if (buffer == nint.Zero)
                         {
@@ -724,6 +733,10 @@ namespace etwlib
                         if (status == ERROR_INSUFFICIENT_BUFFER)
                         {
                             Debug.Assert(traceEventInfoBuffer == nint.Zero);
+                            if (Utilities.IsBufferSizeTooLarge(traceEventInfoBufferSize))
+                            {
+                                throw new Exception($"Requested buffer size {traceEventInfoBufferSize} is too large for allocation.");
+                            }
                             traceEventInfoBuffer = Marshal.AllocHGlobal(
                                 (int)traceEventInfoBufferSize);
                             if (traceEventInfoBuffer == nint.Zero)
@@ -849,6 +862,10 @@ namespace etwlib
                 if (status == ERROR_INSUFFICIENT_BUFFER)
                 {
                     Debug.Assert(buffer == nint.Zero);
+                    if (Utilities.IsBufferSizeTooLarge(bufferSize))
+                    {
+                        throw new Exception($"Requested buffer size {bufferSize} is too large for allocation.");
+                    }
                     buffer = Marshal.AllocHGlobal((int)bufferSize);
                     if (buffer == nint.Zero)
                     {

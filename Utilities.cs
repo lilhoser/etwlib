@@ -128,6 +128,18 @@ namespace etwlib
             var second = Utilities.StringToInteger(values[1]);
             return (first, second);
         }
+
+        /// <summary>
+        /// Checks if a buffer size is too large to safely allocate.
+        /// Returns true if the buffer is too large, false otherwise.
+        /// </summary>
+        /// <param name="bufferSize">The buffer size in bytes.</param>
+        /// <param name="maxSize">Optional: The maximum allowed buffer size in bytes. Defaults to 128MB.</param>
+        public static bool IsBufferSizeTooLarge(uint bufferSize, uint maxSize = 128 * 1024 * 1024)
+        {
+            // Prevent allocations that are suspiciously large or negative (overflow)
+            return bufferSize == 0 || bufferSize > maxSize;
+        }
     }
 
 }
