@@ -54,7 +54,7 @@ namespace UnitTests
             {
                 var provider = ProviderParser.GetProvider(s_WinKernelRegistryGuid);
                 Assert.IsNotNull(provider);
-                Assert.AreEqual(provider.Name, "Microsoft-Windows-Kernel-Registry");
+                Assert.AreEqual("Microsoft-Windows-Kernel-Registry", provider.Name);
             }
             catch (Exception ex)
             {
@@ -71,7 +71,7 @@ namespace UnitTests
             {
                 var providers = ProviderParser.GetProviders();
                 Assert.IsNotNull(providers);
-                Assert.IsTrue(providers.Count > 0);
+                Assert.IsGreaterThan(0, providers.Count);
             }
             catch (Exception ex)
             {
@@ -89,9 +89,9 @@ namespace UnitTests
                 var manifest = ProviderParser.GetManifest(s_WinKernelRegistryGuid);
                 Assert.IsNotNull(manifest);
                 var str = manifest.ToString();
-                Assert.IsTrue(!string.IsNullOrEmpty(str));
+                Assert.IsNotEmpty(str);
                 var xml = manifest.ToXml();
-                Assert.IsTrue(!string.IsNullOrEmpty(xml));
+                Assert.IsNotEmpty(xml);
                 //
                 // Now ask TDH to parse the XML manifest we just created
                 //
@@ -107,9 +107,9 @@ namespace UnitTests
                 var manifest2 = ProviderParser.GetManifest(dummyGuid, target);
                 Assert.IsNotNull(manifest2);
                 str = manifest2.ToString();
-                Assert.IsTrue(!string.IsNullOrEmpty(str));
+                Assert.IsNotEmpty(str);
                 xml = manifest2.ToXml();
-                Assert.IsTrue(!string.IsNullOrEmpty(xml));
+                Assert.IsNotEmpty(xml);
             }
             catch (Exception ex)
             {

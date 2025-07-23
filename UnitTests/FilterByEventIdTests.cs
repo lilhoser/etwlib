@@ -32,7 +32,7 @@ namespace UnitTests
     [TestClass]
     public class FilterByEventIdTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(true, false)]
         [DataRow(false, false)]
         [DataRow(true, true)]
@@ -119,13 +119,11 @@ namespace UnitTests
                             var validStop = new List<string> { "win:Stop", "Stop" };
                             if (parsedEvent.EventId == 5)
                             {
-                                Assert.IsTrue(validStart.Contains(
-                                    parsedEvent.Opcode!.Name.Trim()));
+                                Assert.Contains(parsedEvent.Opcode!.Name.Trim(), validStart);
                             }
                             else if (parsedEvent.EventId == 7)
                             {
-                                Assert.IsTrue(validStop.Contains(
-                                    parsedEvent.Opcode!.Name.Trim()));
+                                Assert.Contains(parsedEvent.Opcode!.Name.Trim(), validStop);
                             }
                             else
                             {
@@ -143,8 +141,7 @@ namespace UnitTests
                         //
                         if (Stackwalk && parsedEvent.StackwalkAddresses != null)
                         {
-                            Assert.IsTrue(parsedEvent.StackwalkAddresses.Count > 0);
-
+                            Assert.IsGreaterThan(0, parsedEvent.StackwalkAddresses.Count);
                             var pid = (int)parsedEvent.ProcessId;
                             if (pid == 0)
                             {

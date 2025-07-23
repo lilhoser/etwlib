@@ -36,7 +36,7 @@ namespace UnitTests
             {
                 var sessions = SessionParser.GetSessions();
                 Assert.IsNotNull(sessions);
-                Assert.IsTrue(sessions.Count > 0);
+                Assert.IsGreaterThan(0, sessions.Count);
                 foreach (var session in sessions)
                 {
                     var provider = ProviderParser.GetProvider(
@@ -65,7 +65,7 @@ namespace UnitTests
             {
                 var sessions = SessionParser.GetSessions();
                 Assert.IsNotNull(sessions);
-                Assert.IsTrue(sessions.Count > 0);
+                Assert.IsGreaterThan(0, sessions.Count);
                 var session = sessions[0];
                 var results = SessionParser.GetSessions(session.EnabledProviders[0].ProviderId);
                 Assert.IsNotNull(results);
@@ -86,7 +86,7 @@ namespace UnitTests
             {
                 var sessions = SessionParser.GetSessions();
                 Assert.IsNotNull(sessions);
-                Assert.IsTrue(sessions.Count > 0);
+                Assert.IsGreaterThan(0, sessions.Count);
             }
             catch (Exception ex)
             {

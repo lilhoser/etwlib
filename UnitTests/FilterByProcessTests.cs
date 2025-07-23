@@ -32,7 +32,7 @@ namespace UnitTests
     [TestClass]
     public class FilterByProcessTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(8)] // ETW allows 8 PIDs max in filters.
         public void Basic(int ProcessCount)
         {
@@ -78,7 +78,7 @@ namespace UnitTests
                         {
                             var result = parser.Parse();
                             Assert.IsNotNull(result);
-                            Assert.IsTrue(targets.Contains((int)result.ProcessId));
+                            Assert.Contains((int)result.ProcessId, targets);
                         }
                         catch (Exception ex)
                         {

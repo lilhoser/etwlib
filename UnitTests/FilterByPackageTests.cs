@@ -33,7 +33,7 @@ namespace UnitTests
     [TestClass]
     public class FilterByPackageTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(true, 5)]
         [DataRow(false, 5)]
         [Ignore] // MS Store apps (UWP) are typically suspended, so even if we could
@@ -80,7 +80,7 @@ namespace UnitTests
                 packages.Add(packageId, appId);
             }
 
-            Assert.IsTrue(packages.Count > 0);
+            Assert.IsGreaterThan(0, packages.Count);
 
             foreach (var package in packages.Take(Attempts))
             {
@@ -180,11 +180,11 @@ namespace UnitTests
 
                             if (TestPackageId)
                             {
-                                Assert.IsTrue(PackageId == package.Item1);
+                                Assert.AreEqual(PackageId, package.Item1);
                             }
                             else
                             {
-                                Assert.IsTrue(AppId == package.Item2);
+                                Assert.AreEqual(AppId, package.Item2);
                             }
                         }
                         catch (InvalidOperationException)

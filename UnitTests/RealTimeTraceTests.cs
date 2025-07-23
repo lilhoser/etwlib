@@ -31,7 +31,7 @@ namespace UnitTests
     [TestClass]
     public class RealTimeTraceTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(EventTraceLevel.Information)]
         [DataRow(EventTraceLevel.LogAlways)]
         public void Basic(EventTraceLevel Level)
@@ -101,7 +101,7 @@ namespace UnitTests
             }
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(EventTraceLevel.Information)]
         [DataRow(EventTraceLevel.LogAlways)]
         public void BasicStartStop(EventTraceLevel Level)

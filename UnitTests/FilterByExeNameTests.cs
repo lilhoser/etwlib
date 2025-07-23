@@ -33,7 +33,7 @@ namespace UnitTests
     [TestClass]
     public class FilterByExeNameTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("svchost.exe")]
         [DataRow("svchost.exe;smss.exe")]
         public void Basic(string ExeName)
@@ -102,8 +102,7 @@ namespace UnitTests
                             {
                                 return;
                             }
-                            Assert.IsTrue(ExeName.ToLower().Contains(
-                                Path.GetFileName(process.MainModule.FileName.ToLower())));
+                            Assert.Contains(Path.GetFileName(process.MainModule.FileName.ToLower()), ExeName);
                         }
                         catch (InvalidOperationException)
                         {

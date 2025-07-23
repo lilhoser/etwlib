@@ -707,6 +707,7 @@ namespace etwlib
                 array.NumberOfEvents);
             var eventDescriptorBuffer = nint.Zero;
             var results = new List<ParsedEtwEvent>();
+            var traceEventInfoBuffer = nint.Zero;
 
             try
             {
@@ -717,53 +718,55 @@ namespace etwlib
                     throw new Exception("Out of memory");
                 }
 
-                foreach (var evt in events)
+                using (var parserBuffers = new EventParserBuffers())
                 {
-                    Marshal.StructureToPtr(evt, eventDescriptorBuffer, false);
-                    var traceEventInfoBuffer = nint.Zero;
-                    uint traceEventInfoBufferSize = 0;
-
-                    for (; ; )
+                    foreach (var evt in events)
                     {
-                        var status = TdhGetManifestEventInformation(
-                            ref ProviderGuid,
-                            eventDescriptorBuffer,
-                            traceEventInfoBuffer,
-                            ref traceEventInfoBufferSize);
-                        if (status == ERROR_INSUFFICIENT_BUFFER)
-                        {
-                            Debug.Assert(traceEventInfoBuffer == nint.Zero);
-                            if (Utilities.IsBufferSizeTooLarge(traceEventInfoBufferSize))
-                            {
-                                throw new Exception($"Requested buffer size {traceEventInfoBufferSize} is too large for allocation.");
-                            }
-                            traceEventInfoBuffer = Marshal.AllocHGlobal(
-                                (int)traceEventInfoBufferSize);
-                            if (traceEventInfoBuffer == nint.Zero)
-                            {
-                                throw new Exception("Out of memory");
-                            }
-                        }
-                        else if (status == ERROR_SUCCESS)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            throw new Exception($"TdhGetManifestEventInformation " +
-                                        $"failed: 0x{status:X}");
-                        }
-                    }
+                        Marshal.StructureToPtr(evt, eventDescriptorBuffer, false);
+                        uint traceEventInfoBufferSize = 0;
 
-                    Debug.Assert(traceEventInfoBuffer != nint.Zero);
+                        for (; ; )
+                        {
+                            var status = TdhGetManifestEventInformation(
+                                ref ProviderGuid,
+                                eventDescriptorBuffer,
+                                traceEventInfoBuffer,
+                                ref traceEventInfoBufferSize);
+                            if (status == ERROR_INSUFFICIENT_BUFFER)
+                            {
+                                if (traceEventInfoBuffer != nint.Zero)
+                                {
+                                    Debug.Assert(traceEventInfoBuffer == nint.Zero);
+                                    throw new Exception("Failed to allocate sufficient buffer");
+                                }
+                                if (Utilities.IsBufferSizeTooLarge(traceEventInfoBufferSize))
+                                {
+                                    throw new Exception($"Requested buffer size {traceEventInfoBufferSize} is too large for allocation.");
+                                }
+                                traceEventInfoBuffer = Marshal.AllocHGlobal((int)traceEventInfoBufferSize);
+                                if (traceEventInfoBuffer == nint.Zero)
+                                {
+                                    throw new Exception("Out of memory");
+                                }
+                            }
+                            else if (status == ERROR_SUCCESS)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                throw new Exception($"TdhGetManifestEventInformation " +
+                                            $"failed: 0x{status:X}");
+                            }
+                        }
 
-                    using (var parserBuffers = new EventParserBuffers())
-                    {
+                        Debug.Assert(traceEventInfoBuffer != nint.Zero);
+
                         //
-                        // NB: ownership of allocated traceEventInfoBuffer passed to
-                        // EventParser dtor!
+                        // NB: ownership of allocated traceEventInfoBuffer passed to EventParserBuffers dtor!
                         //
                         var parser = new EventParser(ProviderGuid, evt, traceEventInfoBuffer, parserBuffers);
+                        traceEventInfoBuffer = nint.Zero;
                         try
                         {
                             var parsedEvent = parser.Parse();
@@ -776,7 +779,6 @@ namespace etwlib
                         }
                     }
                 }
-
                 return results;
             }
             finally
@@ -784,6 +786,10 @@ namespace etwlib
                 if (eventDescriptorBuffer != nint.Zero)
                 {
                     Marshal.FreeHGlobal(eventDescriptorBuffer);
+                }
+                if (traceEventInfoBuffer != nint.Zero)
+                {
+                    Marshal.FreeHGlobal(traceEventInfoBuffer);
                 }
             }
         }

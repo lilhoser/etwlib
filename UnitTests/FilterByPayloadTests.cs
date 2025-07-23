@@ -32,7 +32,7 @@ namespace UnitTests
     [TestClass]
     public class FilterByPayloadTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(7, 0, "status", PAYLOAD_OPERATOR.Equal, "0")]
         [DataRow(7, 0, "status", PAYLOAD_OPERATOR.NotEqual, "0")]
         [DataRow(7, 0, "InfoClass", PAYLOAD_OPERATOR.GreaterOrEqual, "1")]
@@ -115,7 +115,7 @@ namespace UnitTests
 
                         var templateFields = parsedEvent.TemplateData.Select(
                             t => t.Name.ToLower()).ToList();
-                        Assert.IsTrue(templateFields.Contains(FieldName.ToLower()));
+                        Assert.Contains(FieldName.ToLower(), templateFields);
                         var value = parsedEvent.TemplateData.FirstOrDefault(
                             t => t.Name.ToLower() == FieldName.ToLower());
                         Assert.IsNotNull(value);
@@ -137,22 +137,22 @@ namespace UnitTests
                                 }
                             case PAYLOAD_OPERATOR.GreaterThan:
                                 {
-                                    Assert.IsTrue(fieldValue > testValue);
+                                    Assert.IsGreaterThan(testValue, fieldValue);
                                     break;
                                 }
                             case PAYLOAD_OPERATOR.GreaterOrEqual:
                                 {
-                                    Assert.IsTrue(fieldValue >= testValue);
+                                    Assert.IsGreaterThanOrEqualTo(testValue, fieldValue);
                                     break;
                                 }
                             case PAYLOAD_OPERATOR.LessThan:
                                 {
-                                    Assert.IsTrue(fieldValue < testValue);
+                                    Assert.IsLessThan(testValue, fieldValue);
                                     break;
                                 }
                             case PAYLOAD_OPERATOR.LessOrEqual:
                                 {
-                                    Assert.IsTrue(fieldValue <= testValue);
+                                    Assert.IsLessThanOrEqualTo(testValue, fieldValue);
                                     break;
                                 }
                             default:
@@ -194,7 +194,7 @@ namespace UnitTests
 
         // TDH seems to be broken for Between and NotBetween
         [Ignore]
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(new int[] { 4, 5, 7 }, 0, "DataSize", PAYLOAD_OPERATOR.Between, "1,512")]
         [DataRow(new int[] { 7 }, 0, "InfoClass", PAYLOAD_OPERATOR.NotBetween, "0,1")]
         public void IntegerRange(
@@ -274,7 +274,7 @@ namespace UnitTests
 
                         var templateFields = parsedEvent.TemplateData.Select(
                             t => t.Name.ToLower()).ToList();
-                        Assert.IsTrue(templateFields.Contains(FieldName.ToLower()));
+                        Assert.Contains(FieldName.ToLower(), templateFields);
                         var value = parsedEvent.TemplateData.FirstOrDefault(
                             t => t.Name.ToLower() == FieldName.ToLower());
                         Assert.IsNotNull(value);
@@ -335,7 +335,7 @@ namespace UnitTests
         }
 
         // TDH seems to be broken for NotContains
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(new int[] { 5, 7 }, 0, "ValueName", PAYLOAD_OPERATOR.Contains, "a")]
         //[DataRow(new int[] { 5, 7 }, 0, "ValueName", PAYLOAD_OPERATOR.NotContains, "a")]
         [DataRow(new int[] { 5, 7 }, 0, "ValueName", PAYLOAD_OPERATOR.Is, "ConfigFlags")]
@@ -417,7 +417,7 @@ namespace UnitTests
 
                         var templateFields = parsedEvent.TemplateData.Select(
                             t => t.Name.ToLower()).ToList();
-                        Assert.IsTrue(templateFields.Contains(FieldName.ToLower()));
+                        Assert.Contains(FieldName.ToLower(), templateFields);
                         var value = parsedEvent.TemplateData.FirstOrDefault(
                             t => t.Name.ToLower() == FieldName.ToLower());
                         Assert.IsNotNull(value);
@@ -435,12 +435,12 @@ namespace UnitTests
                         {
                             case PAYLOAD_OPERATOR.Contains:
                                 {
-                                    Assert.IsTrue(value.Value.ToLower().Contains(Value.ToLower()));
+                                    Assert.Contains(Value.ToLower(), value.Value.ToLower());
                                     break;
                                 }
                             case PAYLOAD_OPERATOR.NotContains:
                                 {
-                                    Assert.IsTrue(!value.Value.ToLower().Contains(Value.ToLower()));
+                                    Assert.DoesNotContain(Value.ToLower(), value.Value.ToLower());
                                     break;
                                 }
                             case PAYLOAD_OPERATOR.Is:
@@ -536,7 +536,7 @@ namespace UnitTests
             }
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DynamicData(nameof(MultiplePredicatesArgs))]
         public void MultiplePredicates(
             int[] EventIds,
@@ -621,8 +621,7 @@ namespace UnitTests
 
                         foreach (var pred in Predicates)
                         {
-                            Assert.IsTrue(templateFields.Contains(
-                                pred.PayloadFieldName.ToLower()));
+                            Assert.Contains(pred.PayloadFieldName.ToLower(), templateFields);
                             var value = parsedEvent.TemplateData.FirstOrDefault(
                                 t => t.Name.ToLower() == pred.PayloadFieldName.ToLower());
                             Assert.IsNotNull(value);
@@ -667,7 +666,7 @@ namespace UnitTests
 
                         if (MatchAny)
                         {
-                            Assert.IsTrue(numMatches > 0);
+                            Assert.IsGreaterThan(0, numMatches);
                         }
                         else
                         {

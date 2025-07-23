@@ -115,6 +115,10 @@ namespace etwlib
 
         public void SetTraceInfo(nint Buffer)
         {
+            if (m_TraceEventInfoBuffer != nint.Zero)
+            {
+                Marshal.FreeHGlobal(m_TraceEventInfoBuffer);
+            }
             m_TraceEventInfoBuffer = Buffer;
             SetTraceInfo();
         }

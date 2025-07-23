@@ -31,7 +31,7 @@ namespace UnitTests
     [TestClass]
     public class FilterByStackwalkTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(EventTraceLevel.Warning, RegistryProviderKeywords.CreateKey | RegistryProviderKeywords.QueryKey, true)]
         [DataRow(EventTraceLevel.Warning, RegistryProviderKeywords.CreateKey | RegistryProviderKeywords.QueryKey, false)]
         [DataRow(EventTraceLevel.Error, RegistryProviderKeywords.EnumerateKey | RegistryProviderKeywords.QueryKey, true)]
@@ -99,7 +99,7 @@ namespace UnitTests
                             Assert.Fail($"Unexpected level {parsedEvent.Level}");
                         }
 
-                        Assert.IsTrue(level <= Level);
+                        Assert.IsLessThanOrEqualTo((int)Level, (int)level);
 
                         //
                         // Keyword checks
@@ -124,7 +124,7 @@ namespace UnitTests
                             }
                         }
 
-                        Assert.IsTrue(matchedKeywords > 0);
+                        Assert.IsGreaterThan(0, matchedKeywords);
 
                         //
                         // Stackwalk checks
@@ -136,7 +136,7 @@ namespace UnitTests
                         else
                         {
                             Assert.IsNotNull(parsedEvent.StackwalkAddresses);
-                            Assert.IsTrue(parsedEvent.StackwalkAddresses.Count > 0);
+                            Assert.IsGreaterThan(0, parsedEvent.StackwalkAddresses.Count);
 
                             var pid = (int)parsedEvent.ProcessId;
                             if (pid == 0)
