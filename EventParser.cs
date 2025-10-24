@@ -415,6 +415,7 @@ namespace etwlib
                             }
                         case EventHeaderExtendedDataType.RelatedActivityId:
                             {
+                                m_ParsedEvent!.RelatedActivityId = Marshal.PtrToStructure<Guid>(data);
                                 break;
                             }
                         case EventHeaderExtendedDataType.ProcessStartKey:

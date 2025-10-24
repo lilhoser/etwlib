@@ -30,6 +30,7 @@ namespace etwlib
         public uint ThreadId { get; set; }
         public string? UserSid { get; set; }
         public Guid ActivityId { get; set; }
+        public Guid RelatedActivityId { get; set; }
         public DateTime Timestamp { get; set; }
         public string Level { get; set; }
         public ParsedEtwString? Channel { get; set; }
@@ -61,6 +62,10 @@ namespace etwlib
             if (ActivityId != Guid.Empty)
             {
                 sb.AppendLine($"Activity ID: {ActivityId}");
+            }
+            if (RelatedActivityId != Guid.Empty)
+            {
+                sb.AppendLine($"Related Activity ID: {RelatedActivityId}");
             }
             sb.AppendLine($"Level: {Level}");
             sb.AppendLine($"Channel: {Channel}"); ;
