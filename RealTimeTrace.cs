@@ -33,6 +33,7 @@ namespace etwlib
         private readonly Guid m_SessionGuid;
         private nint m_PropertiesBuffer;
         private long m_SessionHandle;
+        private readonly object m_Lock = new object();
 
         public RealTimeTrace(string SessionName) : base()
         {
@@ -159,34 +160,38 @@ namespace etwlib
 
         public override void Stop()
         {
-            if (m_SessionHandle != 0 && m_SessionHandle != -1)
+            lock (m_Lock)
             {
-                Trace(TraceLoggerType.RealTimeTrace,
-                      TraceEventType.Information,
-                      $"Stopping RealTimeTrace {m_SessionName}...");
-                uint result;
-                foreach (var provider in m_EnabledProviders)
+                if (m_SessionHandle != 0 && m_SessionHandle != -1 && m_PropertiesBuffer != nint.Zero)
                 {
-                    result = provider.Disable(m_SessionHandle);
+                    Trace(TraceLoggerType.RealTimeTrace,
+                          TraceEventType.Information,
+                          $"Stopping RealTimeTrace {m_SessionName}...");
+                    uint result;
+                    foreach (var provider in m_EnabledProviders)
+                    {
+                        result = provider.Disable(m_SessionHandle);
+                        if (result != ERROR_SUCCESS)
+                        {
+                            Trace(TraceLoggerType.RealTimeTrace,
+                                  TraceEventType.Error,
+                                  $"RealTimeTrace dispose could not disable provider: " +
+                                  $"{result:X}");
+                        }
+                    }
+                    result = ControlTrace(
+                        m_SessionHandle,
+                        m_SessionName,
+                        m_PropertiesBuffer,
+                        ControlCode.Stop);
                     if (result != ERROR_SUCCESS)
                     {
                         Trace(TraceLoggerType.RealTimeTrace,
                               TraceEventType.Error,
-                              $"RealTimeTrace dispose could not disable provider: " +
+                              $"RealTimeTrace dispose could not stop trace: " +
                               $"{result:X}");
                     }
-                }
-                result = ControlTrace(
-                    m_SessionHandle,
-                    m_SessionName,
-                    m_PropertiesBuffer,
-                    ControlCode.Stop);
-                if (result != ERROR_SUCCESS)
-                {
-                    Trace(TraceLoggerType.RealTimeTrace,
-                          TraceEventType.Error,
-                          $"RealTimeTrace dispose could not stop trace: " +
-                          $"{result:X}");
+                    m_SessionHandle = 0;
                 }
             }
         }
