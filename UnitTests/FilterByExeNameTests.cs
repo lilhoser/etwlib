@@ -104,6 +104,14 @@ namespace UnitTests
                             }
                             Assert.Contains(Path.GetFileName(process.MainModule.FileName.ToLower()), ExeName);
                         }
+                        catch (ArgumentException)
+                        {
+                            // The process has already exited between the kernel
+                            // emitting the event and this callback running. On
+                            // busy CI agents short-lived svchost instances die
+                            // often enough that this path is expected.
+                            return;
+                        }
                         catch (InvalidOperationException)
                         {
                             return;
