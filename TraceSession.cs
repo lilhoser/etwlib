@@ -87,14 +87,13 @@ namespace etwlib
         {
             m_LogFile.BufferCallback = BufferCallback;
             m_LogFile.EventCallback = EventCallback;
-            var logFilePointer = Marshal.AllocHGlobal(Marshal.SizeOf(m_LogFile));
+            var logFilePointer = Marshal.AllocHGlobal(Marshal.SizeOf<EVENT_TRACE_LOGFILE>());
             Marshal.StructureToPtr(m_LogFile, logFilePointer, false);
             var handle = OpenTrace(logFilePointer);
             //
             // Marshal the structure back so we can get the PerfFreq
             //
-            var logfile = (EVENT_TRACE_LOGFILE)Marshal.PtrToStructure(
-                logFilePointer, typeof(EVENT_TRACE_LOGFILE))!;
+            var logfile = Marshal.PtrToStructure<EVENT_TRACE_LOGFILE>(logFilePointer);
             Marshal.FreeHGlobal(logFilePointer);
             if (handle == -1 || handle == 0)
             {

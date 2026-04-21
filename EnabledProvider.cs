@@ -291,7 +291,7 @@ namespace etwlib
 
             var matchAllFlags = Filters.ConvertAll(f => Convert.ToByte(f.Item2)).ToArray();
             var eventFilterDescriptor = Marshal.AllocHGlobal(
-                Marshal.SizeOf(typeof(EVENT_FILTER_DESCRIPTOR)));
+                Marshal.SizeOf<EVENT_FILTER_DESCRIPTOR>());
             if (eventFilterDescriptor == nint.Zero)
             {
                 throw new Exception("Out of memory");
@@ -411,7 +411,7 @@ namespace etwlib
 
             var descriptor = new EVENT_FILTER_DESCRIPTOR();
             descriptor.Type = EventFilterTypeStackWalkLevelKw;
-            descriptor.Size = (uint)Marshal.SizeOf(typeof(EVENT_FILTER_LEVEL_KW));
+            descriptor.Size = (uint)Marshal.SizeOf<EVENT_FILTER_LEVEL_KW>();
             descriptor.Ptr = Marshal.AllocHGlobal((int)descriptor.Size);
             if (descriptor.Ptr == nint.Zero)
             {
@@ -457,7 +457,7 @@ namespace etwlib
                 //
                 // EnableTraceEx2 expects an array of EVENT_FILTER_DESCRIPTOR
                 //
-                var size = Marshal.SizeOf(typeof(EVENT_FILTER_DESCRIPTOR));
+                var size = Marshal.SizeOf<EVENT_FILTER_DESCRIPTOR>();
                 m_FiltersBuffer = Marshal.AllocHGlobal(numFilters * size);
                 if (m_FiltersBuffer == nint.Zero)
                 {
@@ -471,8 +471,8 @@ namespace etwlib
                 }
                 if (m_AggregatedPayloadFilters != nint.Zero)
                 {
-                    var payloadFilter = (EVENT_FILTER_DESCRIPTOR)Marshal.PtrToStructure(
-                        m_AggregatedPayloadFilters, typeof(EVENT_FILTER_DESCRIPTOR))!;
+                    var payloadFilter = Marshal.PtrToStructure<EVENT_FILTER_DESCRIPTOR>(
+                        m_AggregatedPayloadFilters);
                     Debug.Assert(payloadFilter.Type == EventFilterTypePayload);
                     Debug.Assert(payloadFilter.Ptr != nint.Zero);
                     Marshal.StructureToPtr(payloadFilter, pointer, false);
@@ -492,7 +492,7 @@ namespace etwlib
                 }
             }
 
-            m_ParametersBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(parameters));
+            m_ParametersBuffer = Marshal.AllocHGlobal(Marshal.SizeOf<ENABLE_TRACE_PARAMETERS>());
             Marshal.StructureToPtr(parameters, m_ParametersBuffer, false);
             return m_ParametersBuffer;
         }
@@ -503,8 +503,8 @@ namespace etwlib
         {
             var descriptor = new EVENT_FILTER_DESCRIPTOR();
             descriptor.Type = FilterType;
-            var size = Marshal.SizeOf(typeof(EVENT_FILTER_EVENT_ID)) +
-                ((EventIds.Count - 1) * Marshal.SizeOf(typeof(ushort)));
+            var size = Marshal.SizeOf<EVENT_FILTER_EVENT_ID>() +
+                ((EventIds.Count - 1) * Marshal.SizeOf<ushort>());
             descriptor.Size = (uint)size;
             descriptor.Ptr = Marshal.AllocHGlobal(size);
             if (descriptor.Ptr == nint.Zero)
@@ -518,7 +518,7 @@ namespace etwlib
             Marshal.StructureToPtr(filter, descriptor.Ptr, false);
             var dest = nint.Add(descriptor.Ptr, (int)Marshal.OffsetOf<EVENT_FILTER_EVENT_ID>("Events"));
             var ids = EventIds.ConvertAll(id => (ushort)id).ToArray();
-            var byteSize = ids.Length * Marshal.SizeOf(typeof(ushort));
+            var byteSize = ids.Length * Marshal.SizeOf<ushort>();
             var bytes = new byte[byteSize];
             Buffer.BlockCopy(ids, 0, bytes, 0, byteSize);
             Marshal.Copy(bytes, 0, dest, byteSize);

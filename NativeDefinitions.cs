@@ -33,7 +33,7 @@ namespace etwlib
 
     }
 
-    public static class NativeTraceControl
+    public static partial class NativeTraceControl
     {
         #region Enums
         public enum EventTraceLevel : byte
@@ -397,53 +397,53 @@ namespace etwlib
         #endregion
 
         #region APIs
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern uint StartTrace(
-            [In, Out] ref long SessionHandle,
-            [In] string SessionName,
-            [In, Out] nint Properties // EVENT_TRACE_PROPERTIES
+        [LibraryImport("advapi32.dll", EntryPoint = "StartTraceW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        public static partial uint StartTrace(
+            ref long SessionHandle,
+            string SessionName,
+            nint Properties // EVENT_TRACE_PROPERTIES
         );
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern uint ControlTrace(
-            [In] long SessionHandle,
-            [In] string SessionName,
-            [In, Out] nint Properties, // EVENT_TRACE_PROPERTIES
-            [In] ControlCode ControlCode
+        [LibraryImport("advapi32.dll", EntryPoint = "ControlTraceW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        public static partial uint ControlTrace(
+            long SessionHandle,
+            string SessionName,
+            nint Properties, // EVENT_TRACE_PROPERTIES
+            ControlCode ControlCode
         );
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern long OpenTrace(
-            [In, Out] nint LogFile // EVENT_TRACE_LOGFILE*
+        [LibraryImport("advapi32.dll", EntryPoint = "OpenTraceW", SetLastError = true)]
+        public static partial long OpenTrace(
+            nint LogFile // EVENT_TRACE_LOGFILE*
         );
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint CloseTrace(
-            [In] long SessionHandle
-            );
+        [LibraryImport("advapi32.dll", SetLastError = true)]
+        internal static partial uint CloseTrace(
+            long SessionHandle
+        );
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern uint ProcessTrace(
+        [LibraryImport("advapi32.dll", SetLastError = true)]
+        public static partial uint ProcessTrace(
             [In] long[] handleArray,
-            [In] uint handleCount,
-            [In] nint StartTime,
-            [In] nint EndTime);
+            uint handleCount,
+            nint StartTime,
+            nint EndTime);
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern uint EnableTraceEx2(
-          [In] long SessionHandle,
-          [In] Guid ProviderId,
-          [In] EventControlCode ControlCode,
-          [In] byte Level,
-          [In] ulong MatchAnyKeyword,
-          [In] ulong MatchAllKeyword,
-          [In] uint Timeout,
-          [In, Optional] nint EnableParameters // ENABLE_TRACE_PARAMETERS
+        [LibraryImport("advapi32.dll", SetLastError = true)]
+        public static partial uint EnableTraceEx2(
+            long SessionHandle,
+            Guid ProviderId,
+            EventControlCode ControlCode,
+            byte Level,
+            ulong MatchAnyKeyword,
+            ulong MatchAllKeyword,
+            uint Timeout,
+            nint EnableParameters // ENABLE_TRACE_PARAMETERS
         );
         #endregion
     }
 
-    public static class NativeTraceConsumer
+    public static partial class NativeTraceConsumer
     {
         [UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode)]
         public delegate void EventRecordCallback(
@@ -860,132 +860,133 @@ namespace etwlib
         #endregion
 
         #region APIs
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhGetEventInformation(
-            [In] nint Event, // EVENT_RECORD*
-            [In] uint TdhContextCount,
-            [In] nint TdhContext,
-            [Out] nint Buffer, // TRACE_EVENT_INFO*
-            [In, Out] ref uint BufferSize
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhGetEventInformation(
+            nint Event, // EVENT_RECORD*
+            uint TdhContextCount,
+            nint TdhContext,
+            nint Buffer, // TRACE_EVENT_INFO*
+            ref uint BufferSize
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhGetEventMapInformation(
-            [In] nint Event, // EVENT_RECORD*
-            [In] string MapName,
-            [Out] nint Buffer, // EVENT_MAP_INFO*
-            [In, Out] ref uint BufferSize
+        [LibraryImport("tdh.dll", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        internal static partial uint TdhGetEventMapInformation(
+            nint Event, // EVENT_RECORD*
+            string MapName,
+            nint Buffer, // EVENT_MAP_INFO*
+            ref uint BufferSize
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhFormatProperty(
-            [In] nint TraceEventInfo, // TRACE_EVENT_INFO*
-            [In, Optional] nint MapInfo,  // EVENT_MAP_INFO*
-            [In] uint PointerSize,
-            [In] TdhInputType PropertyInType,
-            [In] TdhOutputType PropertyOutType,
-            [In] ushort PropertyLength,
-            [In] ushort UserDataLength,
-            [In] nint UserData,           // BYTE*
-            [In, Out] ref uint BufferSize,
-            [Out, Optional] nint Buffer,  // WCHAR*
-            [In, Out] ref ushort UserDataConsumed
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhFormatProperty(
+            nint TraceEventInfo, // TRACE_EVENT_INFO*
+            nint MapInfo,  // EVENT_MAP_INFO*
+            uint PointerSize,
+            TdhInputType PropertyInType,
+            TdhOutputType PropertyOutType,
+            ushort PropertyLength,
+            ushort UserDataLength,
+            nint UserData,           // BYTE*
+            ref uint BufferSize,
+            nint Buffer,  // WCHAR*
+            ref ushort UserDataConsumed
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhEnumerateProviders(
-            [In] nint Buffer,
-            [In, Out] ref uint BufferSize
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhEnumerateProviders(
+            nint Buffer,
+            ref uint BufferSize
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhEnumerateProvidersForDecodingSource(
-            [In] DecodingSource DecodingSource,
-            [In] nint Buffer,
-            [In] uint BufferSize,
-            [Out] out uint RequiredSize
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhEnumerateProvidersForDecodingSource(
+            DecodingSource DecodingSource,
+            nint Buffer,
+            uint BufferSize,
+            out uint RequiredSize
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhEnumerateManifestProviderEvents(
-            [In] ref Guid ProviderGuid,
-            [Out] nint Buffer, // PROVIDER_EVENT_INFO*
-            [In, Out] ref uint BufferSize
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhEnumerateManifestProviderEvents(
+            ref Guid ProviderGuid,
+            nint Buffer, // PROVIDER_EVENT_INFO*
+            ref uint BufferSize
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhGetManifestEventInformation(
-            [In] ref Guid ProviderGuid,
-            [In] nint EventDescriptor, // EVENT_DESCRIPTOR*
-            [Out] nint Buffer, // TRACE_EVENT_INFO*
-            [In, Out] ref uint BufferSize
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhGetManifestEventInformation(
+            ref Guid ProviderGuid,
+            nint EventDescriptor, // EVENT_DESCRIPTOR*
+            nint Buffer, // TRACE_EVENT_INFO*
+            ref uint BufferSize
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhCreatePayloadFilter(
-            [In] ref Guid ProviderGuid,
-            [In] nint EventDescriptor, // EVENT_DESCRIPTOR*
-            [In] [MarshalAs(UnmanagedType.U1)] bool MatchAny,
-            [In] uint PayloadPredicateCount,
-            [In] nint PayloadPredicates, // PAYLOAD_FILTER_PREDICATE*
-            [In, Out] ref nint PayloadFilter    // PVOID*
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.U4)]
+        internal static partial uint TdhCreatePayloadFilter(
+            ref Guid ProviderGuid,
+            nint EventDescriptor, // EVENT_DESCRIPTOR*
+            [MarshalAs(UnmanagedType.U1)] bool MatchAny,
+            uint PayloadPredicateCount,
+            nint PayloadPredicates, // PAYLOAD_FILTER_PREDICATE*
+            ref nint PayloadFilter    // PVOID*
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhDeletePayloadFilter(
-            [In] ref nint PayloadFilter    // PVOID*
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhDeletePayloadFilter(
+            ref nint PayloadFilter    // PVOID*
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhAggregatePayloadFilters(
-            [In] uint PayloadFilterCount,
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhAggregatePayloadFilters(
+            uint PayloadFilterCount,
             [In] nint[] PayloadFilterPointers, // PVOID*
             [In] byte[] EventMatchAllFlags, // PBOOLEAN
-            [In, Out] nint EventFilterDescriptor // EVENT_FILTER_DESCRIPTOR*
+            nint EventFilterDescriptor // EVENT_FILTER_DESCRIPTOR*
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhCleanupPayloadEventFilterDescriptor(
-            [In] nint EventFilterDescriptor    // EVENT_FILTER_DESCRIPTOR*
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhCleanupPayloadEventFilterDescriptor(
+            nint EventFilterDescriptor    // EVENT_FILTER_DESCRIPTOR*
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhLoadManifest(
-            [In] string Manifest
+        [LibraryImport("tdh.dll", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        internal static partial uint TdhLoadManifest(
+            string Manifest
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhUnloadManifest(
-            [In] string Manifest
+        [LibraryImport("tdh.dll", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        internal static partial uint TdhUnloadManifest(
+            string Manifest
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhGetAllEventsInformation(
-            [In] nint Event,    // PEVENT_RECORD
-            [In, Optional] nint WbemService,    // PVOID
-            [Out] out uint Index,
-            [Out] out uint Count,
-            [In, Out] ref nint Buffer,  // PTRACE_INFO*
-            [In, Out] ref uint BufferSize
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhGetAllEventsInformation(
+            nint Event,    // PEVENT_RECORD
+            nint WbemService,    // PVOID
+            out uint Index,
+            out uint Count,
+            ref nint Buffer,  // PTRACE_INFO*
+            ref uint BufferSize
         );
 
-        [DllImport("tdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint TdhQueryProviderFieldInformation(
-            [In] ref Guid ProviderGuid,
-            [In] ulong EventFieldValue,
-            [In] EVENT_FIELD_TYPE EventFieldType,
-            [In, Out] nint Buffer, // PPROVIDER_FIELD_INFOARRAY
-            [In, Out] ref uint BufferSize
+        [LibraryImport("tdh.dll", SetLastError = true)]
+        internal static partial uint TdhQueryProviderFieldInformation(
+            ref Guid ProviderGuid,
+            ulong EventFieldValue,
+            EVENT_FIELD_TYPE EventFieldType,
+            nint Buffer, // PPROVIDER_FIELD_INFOARRAY
+            ref uint BufferSize
         );
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern uint EnumerateTraceGuidsEx(
-            [In] NativeTraceControl.TRACE_QUERY_INFO_CLASS InfoClass,
-            [In] nint InBuffer,
-            [In] uint InBufferSize,
-            [In, Out] nint OutBuffer,
-            [In] uint OutBufferSize,
-            [In, Out] ref uint ReturnLength
+        [LibraryImport("advapi32.dll", SetLastError = true)]
+        internal static partial uint EnumerateTraceGuidsEx(
+            NativeTraceControl.TRACE_QUERY_INFO_CLASS InfoClass,
+            nint InBuffer,
+            uint InBufferSize,
+            nint OutBuffer,
+            uint OutBufferSize,
+            ref uint ReturnLength
         );
         #endregion
 

@@ -22,29 +22,36 @@ using static etwlib.NativeTraceConsumer;
 
 namespace etwlib
 {
-    public static class MSStoreAppPackageHelper
+    public static partial class MSStoreAppPackageHelper
     {
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern int GetPackageFullName(
-                [In] nint hProcess,
-                [In, Out] ref uint packageFullNameLength,
-                [Out] StringBuilder fullName);
+        [LibraryImport("kernel32.dll", EntryPoint = "GetPackageFullNameW", SetLastError = true)]
+        private static unsafe partial int GetPackageFullName(
+                nint hProcess,
+                ref uint packageFullNameLength,
+                char* fullName);
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern int GetApplicationUserModelId(
-            [In] nint hProcess,
-            [In, Out] ref uint applicationUserModelIdLength,
-            [Out] StringBuilder applicationUserModelId);
+        [LibraryImport("kernel32.dll", EntryPoint = "GetApplicationUserModelIdW", SetLastError = true)]
+        private static unsafe partial int GetApplicationUserModelId(
+            nint hProcess,
+            ref uint applicationUserModelIdLength,
+            char* applicationUserModelId);
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern int ParseApplicationUserModelId(
-            [In] string applicationUserModelId,
-            [In, Out] ref uint packageFamilyNameLength,
-            [In] StringBuilder packageFamilyName,
-            [In, Out] ref uint packageRelativeApplicationIdLength,
-            [Out] StringBuilder packageRelativeApplicationId);
+        [LibraryImport("kernel32.dll", EntryPoint = "ParseApplicationUserModelIdW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        private static unsafe partial int ParseApplicationUserModelId(
+            string applicationUserModelId,
+            ref uint packageFamilyNameLength,
+            char* packageFamilyName,
+            ref uint packageRelativeApplicationIdLength,
+            char* packageRelativeApplicationId);
 
-        public static Tuple<string, string>? GetPackage(nint ProcessHandle)
+        private static string BufferToString(char[] buffer, uint length)
+        {
+            // length includes the null terminator; trim it.
+            int actual = length > 0 ? (int)length - 1 : 0;
+            return new string(buffer, 0, Math.Min(actual, buffer.Length));
+        }
+
+        public static unsafe Tuple<string, string>? GetPackage(nint ProcessHandle)
         {
             uint bufferLength = 1024;
 
@@ -53,41 +60,56 @@ namespace etwlib
             // consists of identifying info like: name, publisher, architecture, etc.
             // This is what the ETW filter type EVENT_FILTER_TYPE_PACKAGE_ID  wants.
             //
-            var packageId = new StringBuilder((int)bufferLength);
-            var result = GetPackageFullName(ProcessHandle, ref bufferLength, packageId);
+            var packageIdBuffer = new char[bufferLength];
+            var packageIdLen = bufferLength;
+            int result;
+            fixed (char* pPackageId = packageIdBuffer)
+            {
+                result = GetPackageFullName(ProcessHandle, ref packageIdLen, pPackageId);
+            }
             if (result != ERROR_SUCCESS)
             {
                 return null;
             }
 
-            var userModelId = new StringBuilder((int)bufferLength);
-            result = GetApplicationUserModelId(ProcessHandle, ref bufferLength, userModelId);
+            var userModelIdBuffer = new char[bufferLength];
+            var userModelIdLen = bufferLength;
+            fixed (char* pUserModelId = userModelIdBuffer)
+            {
+                result = GetApplicationUserModelId(ProcessHandle, ref userModelIdLen, pUserModelId);
+            }
             if (result != ERROR_SUCCESS)
             {
                 return null;
             }
 
             //
-            // The ETW filter type EVENT_FILTER_TYPE_PACKAGE_APP_ID wants the 
+            // The ETW filter type EVENT_FILTER_TYPE_PACKAGE_APP_ID wants the
             // "package-relative APP ID (PRAID)" which must be parsed from
             // the "application user model ID".
             //
+            var packageFamilyBuffer = new char[bufferLength];
             var packageFamilyLength = bufferLength;
-            var packageFamily = new StringBuilder((int)packageFamilyLength);
+            var relativeAppIdBuffer = new char[bufferLength];
             var relativeAppIdLength = bufferLength;
-            var relativeAppId = new StringBuilder((int)relativeAppIdLength);
-            result = ParseApplicationUserModelId(userModelId.ToString(),
-                ref packageFamilyLength,
-                packageFamily,
-                ref relativeAppIdLength,
-                relativeAppId);
+            var userModelIdStr = BufferToString(userModelIdBuffer, userModelIdLen);
+            fixed (char* pFamily = packageFamilyBuffer)
+            fixed (char* pRelative = relativeAppIdBuffer)
+            {
+                result = ParseApplicationUserModelId(userModelIdStr,
+                    ref packageFamilyLength,
+                    pFamily,
+                    ref relativeAppIdLength,
+                    pRelative);
+            }
             if (result != ERROR_SUCCESS)
             {
                 return null;
             }
 
             return new Tuple<string, string>(
-                packageId.ToString(), relativeAppId.ToString());
+                BufferToString(packageIdBuffer, packageIdLen),
+                BufferToString(relativeAppIdBuffer, relativeAppIdLength));
         }
     }
 

@@ -97,8 +97,7 @@ namespace etwlib
                     throw new Exception(error);
                 }
 
-                var providerInfoList = (PROVIDER_ENUMERATION_INFO)Marshal.PtrToStructure(
-                    buffer, typeof(PROVIDER_ENUMERATION_INFO))!;
+                var providerInfoList = Marshal.PtrToStructure<PROVIDER_ENUMERATION_INFO>(buffer);
                 if (providerInfoList.NumberOfProviders == 0)
                 {
                     throw new Exception("There are no ETW providers.");
@@ -110,8 +109,7 @@ namespace etwlib
 
                 for (int i = 0; i < providerInfoList.NumberOfProviders; i++)
                 {
-                    var providerInfo = (TRACE_PROVIDER_INFO)Marshal.PtrToStructure(
-                        pointer, typeof(TRACE_PROVIDER_INFO))!;
+                    var providerInfo = Marshal.PtrToStructure<TRACE_PROVIDER_INFO>(pointer);
                     var provider = new ParsedEtwProvider();
                     provider.Id = providerInfo.ProviderGuid;
                     //
@@ -139,7 +137,7 @@ namespace etwlib
                     }
 
                     results.Add(provider);
-                    pointer = nint.Add(pointer, Marshal.SizeOf(typeof(TRACE_PROVIDER_INFO)));
+                    pointer = nint.Add(pointer, Marshal.SizeOf<TRACE_PROVIDER_INFO>());
                 }
 
                 results.Sort();
@@ -697,10 +695,9 @@ namespace etwlib
         List<ParsedEtwEvent>
         ParseProviderEventArray(Guid ProviderGuid, nint EventArrayBuffer)
         {
-            var array = (PROVIDER_EVENT_INFO)Marshal.PtrToStructure(
-                EventArrayBuffer, typeof(PROVIDER_EVENT_INFO))!;
-            int offset = Marshal.OffsetOf(typeof(PROVIDER_EVENT_INFO),
-                    "EventDescriptorsArray").ToInt32();
+            var array = Marshal.PtrToStructure<PROVIDER_EVENT_INFO>(EventArrayBuffer);
+            int offset = (int)Marshal.OffsetOf<PROVIDER_EVENT_INFO>(
+                    "EventDescriptorsArray").ToInt64();
             nint arrayStart = nint.Add(EventArrayBuffer, offset);
             Debug.Assert(array.NumberOfEvents > 0);
             var events = MarshalHelper.MarshalArray<EVENT_DESCRIPTOR>(arrayStart,
@@ -712,7 +709,7 @@ namespace etwlib
             try
             {
                 eventDescriptorBuffer = Marshal.AllocHGlobal(
-                    Marshal.SizeOf(typeof(EVENT_DESCRIPTOR)));
+                    Marshal.SizeOf<EVENT_DESCRIPTOR>());
                 if (eventDescriptorBuffer == nint.Zero)
                 {
                     throw new Exception("Out of memory");
@@ -810,10 +807,9 @@ namespace etwlib
                 {
                     return results;
                 }
-                var array = (PROVIDER_FIELD_INFOARRAY)Marshal.PtrToStructure(
-                    buffer, typeof(PROVIDER_FIELD_INFOARRAY))!;
-                int offset = Marshal.OffsetOf(typeof(PROVIDER_FIELD_INFOARRAY),
-                        "FieldInfoArray").ToInt32();
+                var array = Marshal.PtrToStructure<PROVIDER_FIELD_INFOARRAY>(buffer);
+                int offset = (int)Marshal.OffsetOf<PROVIDER_FIELD_INFOARRAY>(
+                        "FieldInfoArray").ToInt64();
                 nint arrayStart = nint.Add(buffer, offset);
                 Debug.Assert(array.NumberOfElements > 0);
                 var fields = MarshalHelper.MarshalArray<PROVIDER_FIELD_INFO>(arrayStart,

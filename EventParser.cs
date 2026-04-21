@@ -55,7 +55,7 @@ namespace etwlib
             m_SkipUserData = true;
             m_Buffers = Buffers;
             var record = new EVENT_RECORD();
-            record.EventHeader.Size = (ushort)Marshal.SizeOf(typeof(EVENT_RECORD));
+            record.EventHeader.Size = (ushort)Marshal.SizeOf<EVENT_RECORD>();
             record.EventHeader.Descriptor = EventDescriptor;
             record.EventHeader.ProviderId = ProviderGuid;
             m_Buffers.SetEvent(record);
@@ -390,8 +390,7 @@ namespace etwlib
             nint buffer = m_Buffers.m_Event.ExtendedData;
             for (int i = 0; i < m_Buffers.m_Event.ExtendedDataCount; i++)
             {
-                var item = (EVENT_HEADER_EXTENDED_DATA_ITEM)Marshal.PtrToStructure(
-                    buffer, typeof(EVENT_HEADER_EXTENDED_DATA_ITEM))!;
+                var item = Marshal.PtrToStructure<EVENT_HEADER_EXTENDED_DATA_ITEM>(buffer);
                 var size = (int)item.DataSize;
                 if (size == 0)
                 {
@@ -454,7 +453,7 @@ namespace etwlib
                         $", pointer 0x{item.DataPtr:X}: {ex.Message}");
                     return false;
                 }
-                size = Marshal.SizeOf(typeof(EVENT_HEADER_EXTENDED_DATA_ITEM));
+                size = Marshal.SizeOf<EVENT_HEADER_EXTENDED_DATA_ITEM>();
                 buffer = nint.Add(buffer, size);
             }
             return true;

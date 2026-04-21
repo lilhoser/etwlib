@@ -17,20 +17,27 @@ specific language governing permissions and limitations
 under the License.
 */
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace etwlib
 {
     public static class MarshalHelper
     {
+        private const DynamicallyAccessedMemberTypes StructMembers =
+            DynamicallyAccessedMemberTypes.PublicConstructors |
+            DynamicallyAccessedMemberTypes.NonPublicConstructors |
+            DynamicallyAccessedMemberTypes.PublicFields |
+            DynamicallyAccessedMemberTypes.NonPublicFields;
+
         public
         static
         object?
-        MarshalArbitraryType<T>(nint Pointer)
+        MarshalArbitraryType<[DynamicallyAccessedMembers(StructMembers)] T>(nint Pointer)
         {
             try
             {
-                return Convert.ChangeType(Marshal.PtrToStructure(Pointer, typeof(T)), typeof(T));
+                return Convert.ChangeType(Marshal.PtrToStructure<T>(Pointer), typeof(T));
             }
             catch (Exception ex)
             {
@@ -43,7 +50,7 @@ namespace etwlib
         public
         static
         List<T>
-        MarshalArray<T>(nint ArrayAddress, uint ElementCount)
+        MarshalArray<[DynamicallyAccessedMembers(StructMembers)] T>(nint ArrayAddress, uint ElementCount)
         {
             nint entry = ArrayAddress;
             var result = new List<T>();
@@ -59,7 +66,7 @@ namespace etwlib
                 //
                 unsafe
                 {
-                    entry = (nint)((byte*)entry.ToPointer() + Marshal.SizeOf(typeof(T)));
+                    entry = (nint)((byte*)entry.ToPointer() + Marshal.SizeOf<T>());
                 }
             }
             return result;
