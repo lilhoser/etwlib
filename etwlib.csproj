@@ -1,23 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsTrimmable>true</IsTrimmable>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <Title>etwlib</Title>
     <Authors>Aaron LeMasters</Authors>
     <Description>etwlib is a .NET library that provides raw access to Microsoft Windows Event Tracing (ETW) infrastructure including providers, manifests, and event data. etwlib is meant to be the foundation for larger projects that leverage its capabilities and is distributed as a Nuget package.</Description>
     <PackageProjectUrl>https://github.com/lilhoser/etwlib</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/lilhoser/etwlib</RepositoryUrl>
-    <PackageTags>microsoft;windows;etw;tracing;debugging</PackageTags>
+    <PackageTags>microsoft;windows;etw;tracing;debugging;aot</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <AssemblyVersion>1.12.0</AssemblyVersion>
-    <FileVersion>1.12.0</FileVersion>
-    <Version>1.12.0</Version>
+    <AssemblyVersion>2.0.0</AssemblyVersion>
+    <FileVersion>2.0.0</FileVersion>
+    <Version>2.0.0</Version>
+    <PackageReleaseNotes>v2.0.0: Retarget to net10.0-windows7.0. Migrate all P/Invoke from [DllImport] to [LibraryImport] source-generated marshalling for AOT compatibility. Marked IsAotCompatible + IsTrimmable. Public-API preserved — existing [UnmanagedFunctionPointer] delegate callbacks still work; callers should provide static callbacks for full AOT compatibility.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

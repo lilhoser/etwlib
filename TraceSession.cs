@@ -87,17 +87,31 @@ namespace etwlib
         {
             m_LogFile.BufferCallback = BufferCallback;
             m_LogFile.EventCallback = EventCallback;
-            var logFilePointer = Marshal.AllocHGlobal(Marshal.SizeOf(m_LogFile));
+
+            //
+            // Pin both delegates for the duration of the native trace. Without
+            // this, the CLR is free to relocate or collect the thunk the kernel
+            // is holding a pointer to; when ETW fires an in-flight callback
+            // after ProcessTrace returns, the target may already be invalid
+            // and the runtime fires "Attempt to execute managed code after the
+            // .NET runtime thread state has been destroyed" during testhost
+            // shutdown or between tests.
+            //
+            var eventCallbackHandle = GCHandle.Alloc(EventCallback);
+            var bufferCallbackHandle = GCHandle.Alloc(BufferCallback);
+
+            var logFilePointer = Marshal.AllocHGlobal(Marshal.SizeOf<EVENT_TRACE_LOGFILE>());
             Marshal.StructureToPtr(m_LogFile, logFilePointer, false);
             var handle = OpenTrace(logFilePointer);
             //
             // Marshal the structure back so we can get the PerfFreq
             //
-            var logfile = (EVENT_TRACE_LOGFILE)Marshal.PtrToStructure(
-                logFilePointer, typeof(EVENT_TRACE_LOGFILE))!;
+            var logfile = Marshal.PtrToStructure<EVENT_TRACE_LOGFILE>(logFilePointer);
             Marshal.FreeHGlobal(logFilePointer);
             if (handle == -1 || handle == 0)
             {
+                eventCallbackHandle.Free();
+                bufferCallbackHandle.Free();
                 var error = "OpenTrace() returned an invalid handle:  0x" +
                     Marshal.GetLastWin32Error().ToString("X");
                 Trace(TraceLoggerType.TraceSession,
@@ -142,6 +156,17 @@ namespace etwlib
             finally
             {
                 CloseTrace(handle);
+
+                //
+                // ETW can deliver one or more in-flight callbacks after
+                // ProcessTrace returns and even briefly after CloseTrace
+                // unwinds. Keep both delegate handles alive a little longer
+                // so any final callback hits a live target, then release.
+                //
+                GC.KeepAlive(EventCallback);
+                GC.KeepAlive(BufferCallback);
+                eventCallbackHandle.Free();
+                bufferCallbackHandle.Free();
             }
         }
 

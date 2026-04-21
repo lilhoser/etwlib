@@ -162,14 +162,14 @@ namespace etwlib
             try
             {
                 eventPointer = Marshal.AllocHGlobal(
-                    Marshal.SizeOf(typeof(EVENT_DESCRIPTOR)));
+                    Marshal.SizeOf<EVENT_DESCRIPTOR>());
                 if (eventPointer == nint.Zero)
                 {
                     throw new Exception("Out of memory");
                 }
                 Marshal.StructureToPtr(m_Event, eventPointer, false);
 
-                var predicateSize = Marshal.SizeOf(typeof(PAYLOAD_FILTER_PREDICATE));
+                var predicateSize = Marshal.SizeOf<PAYLOAD_FILTER_PREDICATE>();
                 predicatesPointer = Marshal.AllocHGlobal(
                     predicateSize * m_Predicates.Count);
                 if (predicatesPointer == nint.Zero)

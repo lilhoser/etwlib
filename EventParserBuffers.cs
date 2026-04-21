@@ -109,8 +109,7 @@ namespace etwlib
 
         public void SetTraceInfo()
         {
-            m_TraceEventInfo = (TRACE_EVENT_INFO)Marshal.PtrToStructure(
-                m_TraceEventInfoBuffer, typeof(TRACE_EVENT_INFO))!;
+            m_TraceEventInfo = Marshal.PtrToStructure<TRACE_EVENT_INFO>(m_TraceEventInfoBuffer);
         }
 
         public void SetTraceInfo(nint Buffer)
@@ -125,8 +124,7 @@ namespace etwlib
 
         public void SetMapInfoBuffer()
         {
-            m_MapInfo = (EVENT_MAP_INFO)Marshal.PtrToStructure(
-                m_TdhMapBuffer, typeof(EVENT_MAP_INFO))!;
+            m_MapInfo = Marshal.PtrToStructure<EVENT_MAP_INFO>(m_TdhMapBuffer);
         }
     }
 }

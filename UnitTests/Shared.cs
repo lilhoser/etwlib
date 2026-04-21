@@ -23,6 +23,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
+// Every test in this suite creates a real ETW session named
+// "Unit Test Real-Time Tracing". If two classes execute in parallel they
+// race on that name, causing sporadic ProcessTrace() failures (observed
+// 0x57 / 0x1069). Force serial execution for the whole assembly.
+[assembly: DoNotParallelize]
+
 namespace UnitTests
 {
     public static class Shared

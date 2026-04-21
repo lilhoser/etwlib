@@ -83,19 +83,19 @@ namespace etwlib
                         " or empty buffer.");
                 }
 
-                int numProviders = (int)bufferSize / Marshal.SizeOf(typeof(Guid));
+                int numProviders = (int)bufferSize / Marshal.SizeOf<Guid>();
                 var pointer = buffer;
 
                 for (int i = 0; i < numProviders; i++)
                 {
-                    var guid = (Guid)Marshal.PtrToStructure(pointer, typeof(Guid))!;
+                    var guid = Marshal.PtrToStructure<Guid>(pointer);
                     var session = GetSessions(guid);
                     if (session == null)
                     {
                         continue;
                     }
                     results.AddRange(session);
-                    pointer = nint.Add(pointer, Marshal.SizeOf(typeof(Guid)));
+                    pointer = nint.Add(pointer, Marshal.SizeOf<Guid>());
                 }
 
                 results.Sort();
@@ -129,7 +129,7 @@ namespace etwlib
 
         public static List<ParsedEtwSession>? GetSessions(Guid ProviderId)
         {
-            var inBufferSize = (uint)Marshal.SizeOf(typeof(Guid));
+            var inBufferSize = (uint)Marshal.SizeOf<Guid>();
             if (Utilities.IsBufferSizeTooLarge(inBufferSize))
             {
                 throw new Exception($"Requested buffer size {inBufferSize} is too large for allocation.");
@@ -197,9 +197,8 @@ namespace etwlib
                 }
 
                 var pointer = outBuffer;
-                var info = (TRACE_GUID_INFO)Marshal.PtrToStructure(
-                    pointer, typeof(TRACE_GUID_INFO))!;
-                pointer = nint.Add(pointer, Marshal.SizeOf(typeof(TRACE_GUID_INFO)));
+                var info = Marshal.PtrToStructure<TRACE_GUID_INFO>(pointer);
+                pointer = nint.Add(pointer, Marshal.SizeOf<TRACE_GUID_INFO>());
 
                 //
                 // NB: there can be multiple instances of a provider with the same
@@ -207,16 +206,15 @@ namespace etwlib
                 //
                 for (int i = 0; i < info.InstanceCount; i++)
                 {
-                    var instance = (TRACE_PROVIDER_INSTANCE_INFO)Marshal.PtrToStructure(
-                        pointer, typeof(TRACE_PROVIDER_INSTANCE_INFO))!;
+                    var instance = Marshal.PtrToStructure<TRACE_PROVIDER_INSTANCE_INFO>(pointer);
                     if (instance.EnableCount > 0)
                     {
-                        var sessionPointer = nint.Add(pointer, Marshal.SizeOf(
-                            typeof(TRACE_PROVIDER_INSTANCE_INFO)));
+                        var sessionPointer = nint.Add(pointer,
+                            Marshal.SizeOf<TRACE_PROVIDER_INSTANCE_INFO>());
                         for (int j = 0; j < instance.EnableCount; j++)
                         {
-                            var sessionInfo = (TRACE_ENABLE_INFO)Marshal.PtrToStructure(
-                                sessionPointer, typeof(TRACE_ENABLE_INFO))!;
+                            var sessionInfo = Marshal.PtrToStructure<TRACE_ENABLE_INFO>(
+                                sessionPointer);
                             var enabledProvider = new SessionEnabledProvider(
                                 ProviderId,
                                 instance.Pid,
@@ -236,7 +234,7 @@ namespace etwlib
                             }
                             session!.EnabledProviders.Add(enabledProvider);
                             sessionPointer = nint.Add(sessionPointer,
-                                Marshal.SizeOf(typeof(TRACE_ENABLE_INFO)));
+                                Marshal.SizeOf<TRACE_ENABLE_INFO>());
                         }
                     }
                     if (instance.NextOffset == 0)

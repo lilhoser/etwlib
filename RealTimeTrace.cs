@@ -204,7 +204,7 @@ namespace etwlib
             Trace(TraceLoggerType.RealTimeTrace,
                   TraceEventType.Information,
                   $"Opening existing RealTimeTrace {Name}...");
-            var logFilePointer = Marshal.AllocHGlobal(Marshal.SizeOf(logfile));
+            var logFilePointer = Marshal.AllocHGlobal(Marshal.SizeOf<EVENT_TRACE_LOGFILE>());
             Marshal.StructureToPtr(logfile, logFilePointer, false);
             var handle = OpenTrace(logFilePointer);
             Marshal.FreeHGlobal(logFilePointer);
@@ -225,7 +225,7 @@ namespace etwlib
         GenerateTraceProperties()
         {
             var loggerName = Encoding.Unicode.GetBytes(m_SessionName + "\0");
-            var loggerNameLocation = Marshal.SizeOf(typeof(EVENT_TRACE_PROPERTIES));
+            var loggerNameLocation = Marshal.SizeOf<EVENT_TRACE_PROPERTIES>();
             int total = loggerNameLocation + loggerName.Length;
             var buffer = Marshal.AllocHGlobal(total);
             var properties = new EVENT_TRACE_PROPERTIES();
