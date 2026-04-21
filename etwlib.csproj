@@ -18,10 +18,11 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <AssemblyVersion>2.0.0</AssemblyVersion>
-    <FileVersion>2.0.0</FileVersion>
-    <Version>2.0.0</Version>
-    <PackageReleaseNotes>v2.0.0: Retarget to net10.0-windows7.0. Migrate all P/Invoke from [DllImport] to [LibraryImport] source-generated marshalling for AOT compatibility. Marked IsAotCompatible + IsTrimmable. Public-API preserved — existing [UnmanagedFunctionPointer] delegate callbacks still work; callers should provide static callbacks for full AOT compatibility.</PackageReleaseNotes>
+    <AssemblyVersion>2.0.1</AssemblyVersion>
+    <FileVersion>2.0.1</FileVersion>
+    <Version>2.0.1</Version>
+    <PackageReleaseNotes>v2.0.1: Bump transitive symbolresolver dependency to 2.0.0 so consumers get the AOT/trim-compatible release (v2.0.0 shipped still pinning symbolresolver 1.3.0).
+v2.0.0: Retarget to net10.0-windows7.0. Migrate all P/Invoke from [DllImport] to [LibraryImport] source-generated marshalling for AOT compatibility. Marked IsAotCompatible + IsTrimmable. Public-API preserved — existing [UnmanagedFunctionPointer] delegate callbacks still work; callers should provide static callbacks for full AOT compatibility.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="symbolresolver" Version="1.3.0" />
+    <PackageReference Include="symbolresolver" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
