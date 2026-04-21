@@ -15,7 +15,7 @@ jobs:
   publish:
     name: Pack & push to nuget.org
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     permissions:
       contents: read
@@ -59,7 +59,10 @@ jobs:
         run: msbuild.exe etwlib.sln /nologo /nr:false /p:platform="Any CPU" /p:configuration="Release"
 
       - name: Test (library tests must pass before we ship)
-        run: dotnet test --no-restore --verbosity normal --configuration Release
+        # --no-build so we don't redundantly rebuild what msbuild already produced.
+        # Target UnitTests.csproj explicitly instead of the solution to match the
+        # fast path the CI workflow uses.
+        run: dotnet test UnitTests/UnitTests.csproj --no-build --no-restore --verbosity normal --configuration Release
 
       - name: Locate package
         id: package
