@@ -4,9 +4,13 @@ etwlib is a .NET library that provides raw access to Microsoft Windows Event Tra
 
 # Requirements
 * Windows 10+ or later operating system with debugging tools installed
-* .NET 7+ runtime
+* .NET 10+ runtime (v2.0.0+). Use etwlib 1.12.x for .NET 7/8/9.
 * Some features require administrator privileges
 * etwlib depends on the [symbolresolver](https://github.com/lilhoser/symbolresolver) [nuget package](https://www.nuget.org/packages/symbolresolver/) for stackwalk filtering
+
+# AOT / trimming
+
+Starting with v2.0.0, etwlib is marked `IsAotCompatible` and `IsTrimmable`, and all P/Invoke declarations use source-generated `[LibraryImport]` marshalling. To stay AOT-safe in your own code when calling `TraceSession.Consume`, pass `EventRecordCallback` / `BufferCallback` delegates that target *static* methods — lambdas that close over instance state force the runtime to synthesize a delegate thunk, which is not supported under Native AOT.
 
 # Getting started
 
