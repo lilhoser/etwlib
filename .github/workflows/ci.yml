@@ -1,19 +1,23 @@
 name: CI
+
 on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
 jobs:
   etwlib_Unit_Tests:
     runs-on: windows-latest
     steps:
-      # setup .NET using setup-dotnet action
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
       - name: checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce  # v2.0.0
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v2
-      - uses: actions/cache@v4
+        uses: nuget/setup-nuget@d105a947828025cd7a980103c35ba2bfae586d0f  # v2.0.2
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -26,3 +30,33 @@ jobs:
           msbuild.exe etwlib.sln /nologo /nr:false /p:platform="Any CPU" /p:configuration="Release"
       - name: Test
         run: dotnet test --no-restore --verbosity normal
+
+  etwlib_AotSmokeTest:
+    runs-on: windows-latest
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
+      - name: checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+      - name: Publish AOT smoke test
+        # Warning-as-error policy lives in AotSmokeTest.csproj
+        # (TreatWarningsAsErrors=true, TrimmerSingleWarn=false) so a
+        # regression in etwlib's AOT posture surfaces here as an error.
+        run: dotnet publish AotSmokeTest/AotSmokeTest.csproj -c Release -r win-x64
+      - name: Run AOT smoke test
+        # Exercises the LibraryImport surface and the EventRecordCallback /
+        # BufferCallback delegate-marshalling path under AOT (the path that
+        # broke pre-fix in 8a2fe371 — pinning regression on this code path
+        # would surface here as a crash rather than a build error).
+        shell: pwsh
+        run: |
+          $exe = "AotSmokeTest/bin/Release/net10.0-windows7.0/win-x64/publish/AotSmokeTest.exe"
+          if (-not (Test-Path $exe)) {
+            Write-Error "AOT-published binary not found at $exe"
+            exit 1
+          }
+          & $exe
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "AOT smoke test exited with code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }

@@ -11,27 +11,30 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write       # gh release create writes the Release object
+  id-token: write       # mint OIDC token for nuget.org trusted publishing
+  attestations: write   # publish SLSA build provenance
+
 jobs:
   publish:
     name: Pack & push to nuget.org
     runs-on: windows-latest
     timeout-minutes: 30
-
-    permissions:
-      contents: read
+    environment: production
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce  # v2.0.0
 
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v2
+        uses: nuget/setup-nuget@d105a947828025cd7a980103c35ba2bfae586d0f  # v2.0.2
 
       - name: Resolve version
         id: version
@@ -59,9 +62,6 @@ jobs:
         run: msbuild.exe etwlib.sln /nologo /nr:false /p:platform="Any CPU" /p:configuration="Release"
 
       - name: Test (library tests must pass before we ship)
-        # --no-build so we don't redundantly rebuild what msbuild already produced.
-        # Target UnitTests.csproj explicitly instead of the solution to match the
-        # fast path the CI workflow uses.
         run: dotnet test UnitTests/UnitTests.csproj --no-build --no-restore --verbosity normal --configuration Release
 
       - name: Locate package
@@ -77,23 +77,88 @@ jobs:
           "path=$($pkg.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: etwlib-${{ steps.version.outputs.version }}
           path: ${{ steps.package.outputs.path }}
           if-no-files-found: error
 
-      - name: Push to nuget.org
+      - name: Attest build provenance
+        # Signs the .nupkg via Sigstore (keyless, uses the OIDC token).
+        # Publishes an attestation to GitHub's transparency log that
+        # consumers can verify with: gh attestation verify <nupkg> --repo lilhoser/etwlib
+        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f  # v3.2.0
+        with:
+          subject-path: ${{ steps.package.outputs.path }}
+
+      - name: Acquire nuget.org access token via OIDC trusted publishing
+        # This step exchanges the GitHub Actions OIDC token for a short-lived
+        # nuget.org API key. Replaces the long-lived NUGET_API_KEY secret.
+        #
+        # Prerequisite: register this workflow as a trusted publisher for the
+        # 'etwlib' package on nuget.org (Manage Package -> Trusted Publishers):
+        #   - Repository:  lilhoser/etwlib
+        #   - Workflow:    .github/workflows/publish.yml
+        #   - Environment: production
+        #
+        # The endpoint URL and audience below match nuget.org's documented
+        # OIDC trusted-publishing protocol; verify against the current docs at
+        # https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing
+        # if this step fails with 401/404 — protocol details may have evolved.
         if: ${{ inputs.dry_run != true }}
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        id: nuget_token
         shell: pwsh
+        env:
+          NUGET_OIDC_AUDIENCE: 'nuget'
+          NUGET_OIDC_ENDPOINT: 'https://www.nuget.org/api/v2/oidc/access_token'
         run: |
-          if (-not $env:NUGET_API_KEY) {
-            Write-Error "NUGET_API_KEY secret is not configured in this repo. Add it under Settings → Secrets and variables → Actions."
+          # 1. Mint a GitHub Actions OIDC token bound to nuget.org as audience
+          $idTokenUrl = "$($env:ACTIONS_ID_TOKEN_REQUEST_URL)&audience=$($env:NUGET_OIDC_AUDIENCE)"
+          $idTokenResp = Invoke-RestMethod -Uri $idTokenUrl `
+            -Headers @{ Authorization = "Bearer $($env:ACTIONS_ID_TOKEN_REQUEST_TOKEN)" }
+          $idToken = $idTokenResp.value
+          if (-not $idToken) {
+            Write-Error "Failed to obtain GitHub Actions OIDC token"
             exit 1
           }
+
+          # 2. Exchange the OIDC token for a nuget.org access token
+          $body = @{ token = $idToken } | ConvertTo-Json
+          try {
+            $resp = Invoke-RestMethod -Method POST -Uri $env:NUGET_OIDC_ENDPOINT `
+              -Body $body -ContentType 'application/json'
+          } catch {
+            Write-Error "nuget.org OIDC exchange failed: $($_.Exception.Message)"
+            Write-Error "Verify the trusted publisher is registered for package 'etwlib' on nuget.org"
+            Write-Error "and that the workflow path / environment match the registration."
+            exit 1
+          }
+
+          if (-not $resp.access_token) {
+            Write-Error "nuget.org returned no access_token in response"
+            exit 1
+          }
+
+          # Mask the token in logs and pass it to subsequent steps
+          Write-Host "::add-mask::$($resp.access_token)"
+          "access_token=$($resp.access_token)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Push to nuget.org
+        if: ${{ inputs.dry_run != true }}
+        shell: pwsh
+        run: |
           dotnet nuget push "${{ steps.package.outputs.path }}" `
             --source https://api.nuget.org/v3/index.json `
-            --api-key $env:NUGET_API_KEY `
+            --api-key "${{ steps.nuget_token.outputs.access_token }}" `
             --skip-duplicate
+
+      - name: Create GitHub Release
+        if: ${{ inputs.dry_run != true }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            --title $env:GITHUB_REF_NAME `
+            --generate-notes `
+            "${{ steps.package.outputs.path }}"
