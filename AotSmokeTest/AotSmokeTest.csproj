@@ -12,6 +12,11 @@
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <IsPackable>false</IsPackable>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- Surface every trim warning individually rather than a single per-assembly summary. -->
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <!-- Promote any warning in this project to an error so AOT regressions in the
+         smoke test surface area (callback marshalling, native interop) fail the build. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
