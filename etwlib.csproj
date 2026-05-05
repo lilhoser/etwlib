@@ -28,10 +28,13 @@ v2.0.0: Retarget to net10.0-windows7.0. Migrate all P/Invoke from [DllImport] to
   <ItemGroup>
     <Compile Remove="TestResults\**" />
     <Compile Remove="UnitTests\**" />
+    <Compile Remove="AotSmokeTest\**" />
     <EmbeddedResource Remove="TestResults\**" />
     <EmbeddedResource Remove="UnitTests\**" />
+    <EmbeddedResource Remove="AotSmokeTest\**" />
     <None Remove="TestResults\**" />
     <None Remove="UnitTests\**" />
+    <None Remove="AotSmokeTest\**" />
   </ItemGroup>
 
   <ItemGroup>
