@@ -105,7 +105,10 @@ jobs:
         # OIDC trusted-publishing protocol; verify against the current docs at
         # https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing
         # if this step fails with 401/404 — protocol details may have evolved.
-        if: ${{ inputs.dry_run != true }}
+        #
+        # NOTE: this step runs in dry_run mode too — that's the only way to
+        # verify the trusted-publisher registration without committing to a
+        # real release. Only the actual nuget push below is dry_run-gated.
         id: nuget_token
         shell: pwsh
         env:
