@@ -41,6 +41,13 @@ namespace UnitTests
             ConfigureLoggers();
 
             //
+            // Deterministic event source — our own pid is in the filter targets
+            // below, and every OpenSCManager call emits RPC client-call events
+            // from this process.
+            //
+            using var stimulus = new RpcStimulus();
+
+            //
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
@@ -51,11 +58,14 @@ namespace UnitTests
                 {
                     var processes = Process.GetProcesses();
                     //
-                    // Pick svchost targets, since they're likely to use RPC.
+                    // Our own pid first (the RpcStimulus guarantees it emits),
+                    // then svchost fillers to exercise the multi-pid filter
+                    // plumbing up to the ETW maximum.
                     //
                     var targets = processes.Where(
                         p => p.ProcessName != null && p.ProcessName.Contains("svchost")).Select(
-                        p => p.Id).Take(ProcessCount).ToList();
+                        p => p.Id).Take(ProcessCount - 1).ToList();
+                    targets.Add(Environment.ProcessId);
                     Debug.Assert(targets.Count > 0);
                     var provider = trace.AddProvider(
                         s_RpcEtwGuid, "RPC", EventTraceLevel.LogAlways, 0xFFFFFFFFFFFFFFFF, 0);
@@ -63,9 +73,11 @@ namespace UnitTests
                     trace.Start();
 
                     //
-                    // Begin consuming events. This is a blocking call.
+                    // Begin consuming events. This is a blocking call bounded by
+                    // a deadline (see ConsumeWithDeadline).
                     //
-                    trace.Consume(new EventRecordCallback((Event) =>
+                    ConsumeWithDeadline(trace,
+                    new EventRecordCallback((Event) =>
                     {
                         var evt = (EVENT_RECORD)Marshal.PtrToStructure(
                                 Event, typeof(EVENT_RECORD))!;
@@ -86,24 +98,10 @@ namespace UnitTests
                         }
                         eventsConsumed++;
                     }),
-                    new BufferCallback((LogFile) =>
-                    {
-                        var logfile = new EVENT_TRACE_LOGFILE();
-                        try
-                        {
-                            logfile = (EVENT_TRACE_LOGFILE)
-                                Marshal.PtrToStructure(LogFile, typeof(EVENT_TRACE_LOGFILE))!;
-                        }
-                        catch (Exception ex)
-                        {
-                            Assert.Fail($"Unable to cast EVENT_TRACE_LOGFILE: {ex.Message}");
-                        }
-                        if (eventsConsumed >= s_NumEvents)
-                        {
-                            return 0;
-                        }
-                        return 1;
-                    }));
+                    () => eventsConsumed,
+                    s_FilteredNumEvents,
+                    TimeSpan.FromSeconds(60),
+                    $"FilterByProcess(own pid + {ProcessCount - 1} svchost)");
                 }
                 catch (Exception ex)
                 {

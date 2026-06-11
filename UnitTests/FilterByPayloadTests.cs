@@ -51,6 +51,11 @@ namespace UnitTests
             ConfigureLoggers();
 
             //
+            // Deterministic event source — never wait on ambient registry activity.
+            //
+            using var stimulus = new RegistryStimulus();
+
+            //
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
@@ -75,9 +80,11 @@ namespace UnitTests
                     trace.Start();
 
                     //
-                    // Begin consuming events. This is a blocking call.
+                    // Begin consuming events. This is a blocking call bounded by
+                    // a deadline (see ConsumeWithDeadline).
                     //
-                    trace.Consume(new EventRecordCallback((Event) =>
+                    ConsumeWithDeadline(trace,
+                    new EventRecordCallback((Event) =>
                     {
                         var evt = (EVENT_RECORD)Marshal.PtrToStructure(
                                 Event, typeof(EVENT_RECORD))!;
@@ -162,24 +169,10 @@ namespace UnitTests
                         }
                         eventsConsumed++;
                     }),
-                    new BufferCallback((LogFile) =>
-                    {
-                        var logfile = new EVENT_TRACE_LOGFILE();
-                        try
-                        {
-                            logfile = (EVENT_TRACE_LOGFILE)
-                                Marshal.PtrToStructure(LogFile, typeof(EVENT_TRACE_LOGFILE))!;
-                        }
-                        catch (Exception ex)
-                        {
-                            Assert.Fail($"Unable to cast EVENT_TRACE_LOGFILE: {ex.Message}");
-                        }
-                        if (eventsConsumed >= s_NumEvents)
-                        {
-                            return 0;
-                        }
-                        return 1;
-                    }));
+                    () => eventsConsumed,
+                    s_FilteredNumEvents,
+                    TimeSpan.FromSeconds(60),
+                    $"IntegerEquality({FieldName} {Operator} {Value})");
                 }
                 catch (AssertFailedException)
                 {
@@ -352,6 +345,14 @@ namespace UnitTests
             ConfigureLoggers();
 
             //
+            // Deterministic event source — never wait on ambient registry
+            // activity. The stimulus sets/queries a value literally named
+            // "ConfigFlags", so the Is/"ConfigFlags" row that used to wait
+            // forever on idle machines now matches within seconds.
+            //
+            using var stimulus = new RegistryStimulus();
+
+            //
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
@@ -377,9 +378,11 @@ namespace UnitTests
                     trace.Start();
 
                     //
-                    // Begin consuming events. This is a blocking call.
+                    // Begin consuming events. This is a blocking call bounded by
+                    // a deadline (see ConsumeWithDeadline).
                     //
-                    trace.Consume(new EventRecordCallback((Event) =>
+                    ConsumeWithDeadline(trace,
+                    new EventRecordCallback((Event) =>
                     {
                         var evt = (EVENT_RECORD)Marshal.PtrToStructure(
                                 Event, typeof(EVENT_RECORD))!;
@@ -461,25 +464,10 @@ namespace UnitTests
                         }
                         eventsConsumed++;
                     }),
-                    new BufferCallback((LogFile) =>
-                    {
-                        var logfile = new EVENT_TRACE_LOGFILE();
-                        try
-                        {
-                            logfile = (EVENT_TRACE_LOGFILE)
-                                Marshal.PtrToStructure(LogFile, typeof(EVENT_TRACE_LOGFILE))!;
-                        }
-                        catch (Exception ex)
-                        {
-                            Assert.Fail($"Unable to cast EVENT_TRACE_LOGFILE: {ex.Message}");
-                        }
-                        if (eventsConsumed >= s_NumEvents ||
-                            (Operator == PAYLOAD_OPERATOR.Is && eventsConsumed >= 5))
-                        {
-                            return 0;
-                        }
-                        return 1;
-                    }));
+                    () => eventsConsumed,
+                    s_FilteredNumEvents,
+                    TimeSpan.FromSeconds(60),
+                    $"StringEquality({FieldName} {Operator} {Value})");
                 }
                 catch (AssertFailedException)
                 {
@@ -549,6 +537,11 @@ namespace UnitTests
             ConfigureLoggers();
 
             //
+            // Deterministic event source — never wait on ambient registry activity.
+            //
+            using var stimulus = new RegistryStimulus();
+
+            //
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
@@ -577,9 +570,11 @@ namespace UnitTests
                     trace.Start();
 
                     //
-                    // Begin consuming events. This is a blocking call.
+                    // Begin consuming events. This is a blocking call bounded by
+                    // a deadline (see ConsumeWithDeadline).
                     //
-                    trace.Consume(new EventRecordCallback((Event) =>
+                    ConsumeWithDeadline(trace,
+                    new EventRecordCallback((Event) =>
                     {
                         var evt = (EVENT_RECORD)Marshal.PtrToStructure(
                                 Event, typeof(EVENT_RECORD))!;
@@ -675,25 +670,10 @@ namespace UnitTests
 
                         eventsConsumed++;
                     }),
-                    new BufferCallback((LogFile) =>
-                    {
-                        var logfile = new EVENT_TRACE_LOGFILE();
-                        try
-                        {
-                            logfile = (EVENT_TRACE_LOGFILE)
-                                Marshal.PtrToStructure(LogFile, typeof(EVENT_TRACE_LOGFILE))!;
-                        }
-                        catch (Exception ex)
-                        {
-                            Assert.Fail($"Unable to cast EVENT_TRACE_LOGFILE: {ex.Message}");
-                        }
-                        if (eventsConsumed >= s_NumEvents ||
-                            (Predicates.Any(p => p.CompareOp == PAYLOAD_OPERATOR.Is) && eventsConsumed >= 5))
-                        {
-                            return 0;
-                        }
-                        return 1;
-                    }));
+                    () => eventsConsumed,
+                    s_FilteredNumEvents,
+                    TimeSpan.FromSeconds(60),
+                    $"MultiplePredicates(MatchAny={MatchAny})");
                 }
                 catch (AssertFailedException)
                 {
