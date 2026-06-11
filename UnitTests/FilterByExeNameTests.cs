@@ -34,13 +34,27 @@ namespace UnitTests
     public class FilterByExeNameTests
     {
         [TestMethod]
-        [DataRow("svchost.exe")]
-        [DataRow("svchost.exe;smss.exe")]
-        public void Basic(string ExeName)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Basic(bool IncludeSecondExe)
         {
             int eventsConsumed = 0;
 
             ConfigureLoggers();
+
+            //
+            // Filter on THIS process's executable so the RpcStimulus below makes
+            // matching events deterministic — filtering on svchost.exe meant
+            // waiting on ambient service activity. The multi-name row keeps a
+            // second exe in the list to exercise list parsing.
+            //
+            var ExeName = Path.GetFileName(Environment.ProcessPath!)!.ToLowerInvariant();
+            if (IncludeSecondExe)
+            {
+                ExeName += ";smss.exe";
+            }
+
+            using var stimulus = new RpcStimulus();
 
             //
             // This trace will automatically terminate after a set number
@@ -57,9 +71,11 @@ namespace UnitTests
                     trace.Start();
 
                     //
-                    // Begin consuming events. This is a blocking call.
+                    // Begin consuming events. This is a blocking call bounded by
+                    // a deadline (see ConsumeWithDeadline).
                     //
-                    trace.Consume(new EventRecordCallback((Event) =>
+                    ConsumeWithDeadline(trace,
+                    new EventRecordCallback((Event) =>
                     {
                         var evt = (EVENT_RECORD)Marshal.PtrToStructure(
                                 Event, typeof(EVENT_RECORD))!;
@@ -127,24 +143,10 @@ namespace UnitTests
 
                         eventsConsumed++;
                     }),
-                    new BufferCallback((LogFile) =>
-                    {
-                        var logfile = new EVENT_TRACE_LOGFILE();
-                        try
-                        {
-                            logfile = (EVENT_TRACE_LOGFILE)
-                                Marshal.PtrToStructure(LogFile, typeof(EVENT_TRACE_LOGFILE))!;
-                        }
-                        catch (Exception ex)
-                        {
-                            Assert.Fail($"Unable to cast EVENT_TRACE_LOGFILE: {ex.Message}");
-                        }
-                        if (eventsConsumed >= s_NumEvents)
-                        {
-                            return 0;
-                        }
-                        return 1;
-                    }));
+                    () => eventsConsumed,
+                    s_FilteredNumEvents,
+                    TimeSpan.FromSeconds(60),
+                    $"FilterByExeName({ExeName})");
                 }
                 catch (AssertFailedException)
                 {

@@ -45,6 +45,13 @@ namespace UnitTests
             await ConfigureSymbolResolver();
 
             //
+            // Deterministic event source — every OpenSCManager call emits
+            // RpcClientCallStart (5) / RpcClientCallStop (7) from this process,
+            // so the test never waits on ambient RPC activity.
+            //
+            using var stimulus = new RpcStimulus();
+
+            //
             // This trace will automatically terminate after a set number
             // of ETW events have been successfully consumed/parsed.
             //
@@ -70,9 +77,11 @@ namespace UnitTests
                     trace.Start();
 
                     //
-                    // Begin consuming events. This is a blocking call.
+                    // Begin consuming events. This is a blocking call bounded by
+                    // a deadline (see ConsumeWithDeadline).
                     //
-                    trace.Consume(new EventRecordCallback((Event) =>
+                    ConsumeWithDeadline(trace,
+                    new EventRecordCallback((Event) =>
                     {
                         var evt = (EVENT_RECORD)Marshal.PtrToStructure(
                                 Event, typeof(EVENT_RECORD))!;
@@ -153,24 +162,10 @@ namespace UnitTests
 
                         eventsConsumed++;
                     }),
-                    new BufferCallback((LogFile) =>
-                    {
-                        var logfile = new EVENT_TRACE_LOGFILE();
-                        try
-                        {
-                            logfile = (EVENT_TRACE_LOGFILE)
-                                Marshal.PtrToStructure(LogFile, typeof(EVENT_TRACE_LOGFILE))!;
-                        }
-                        catch (Exception ex)
-                        {
-                            Assert.Fail($"Unable to cast EVENT_TRACE_LOGFILE: {ex.Message}");
-                        }
-                        if (eventsConsumed >= s_NumEvents)
-                        {
-                            return 0;
-                        }
-                        return 1;
-                    }));
+                    () => eventsConsumed,
+                    s_FilteredNumEvents,
+                    TimeSpan.FromSeconds(60),
+                    $"FilterByEventId(Enable={Enable}, Stackwalk={Stackwalk})");
                 }
                 catch (AssertFailedException)
                 {

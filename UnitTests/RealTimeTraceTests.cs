@@ -187,5 +187,28 @@ namespace UnitTests
                 }
             });
         }
+
+        [TestMethod]
+        public void StopReportsStatusAndIsIdempotent()
+        {
+            ConfigureLoggers();
+
+            using (var trace = new RealTimeTrace("Unit Test Stop Status Tracing"))
+            {
+                trace.AddProvider(s_RpcEtwGuid, "RPC", EventTraceLevel.Information, 0xFFFFFFFFFFFFFFFF, 0);
+                trace.Start();
+
+                trace.Stop();
+                Assert.AreEqual((uint)ERROR_SUCCESS, trace.LastStopStatus,
+                    "Stop() must report ERROR_SUCCESS after stopping a running session");
+
+                //
+                // A second Stop() is a no-op (the handle was released on success)
+                // and must not disturb the recorded status.
+                //
+                trace.Stop();
+                Assert.AreEqual((uint)ERROR_SUCCESS, trace.LastStopStatus);
+            }
+        }
     }
 }

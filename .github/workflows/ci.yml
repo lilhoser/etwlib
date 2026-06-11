@@ -8,6 +8,13 @@ permissions:
 jobs:
   etwlib_Unit_Tests:
     runs-on: windows-latest
+    # The FilterBy* suites generate their own stimulus (see UnitTests/Shared.cs)
+    # and every consume carries a 60s deadline, so the healthy suite finishes in
+    # minutes. The job timeout bounds the damage if something still wedges, and
+    # --blame-hang below turns a hang into a failed run with a dump that names
+    # the stuck test (a 92-minute ambient-wait hang inside FilterByPayloadTests
+    # motivated all of this).
+    timeout-minutes: 20
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2  # v5.3.0
@@ -29,10 +36,11 @@ jobs:
         run: |
           msbuild.exe etwlib.sln /nologo /nr:false /p:platform="Any CPU" /p:configuration="Release"
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --no-restore --verbosity normal --blame-hang --blame-hang-timeout 2m --blame-hang-dump-type mini
 
   etwlib_AotSmokeTest:
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2  # v5.3.0
