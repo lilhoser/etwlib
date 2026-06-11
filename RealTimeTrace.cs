@@ -35,6 +35,13 @@ namespace etwlib
         private long m_SessionHandle;
         private readonly object m_Lock = new object();
 
+        //
+        // Win32 status of the most recent Stop() attempt. ERROR_SUCCESS when the
+        // session was stopped (or was already gone); any other value means the
+        // kernel-side session may still be running and Stop() can be retried.
+        //
+        public uint LastStopStatus { get; private set; }
+
         public RealTimeTrace(string SessionName) : base()
         {
             m_SessionName = SessionName;
@@ -184,14 +191,55 @@ namespace etwlib
                         m_SessionName,
                         m_PropertiesBuffer,
                         ControlCode.Stop);
-                    if (result != ERROR_SUCCESS)
+                    if (result == ERROR_WMI_INSTANCE_NOT_FOUND)
                     {
+                        //
+                        // The session is already gone — stopped externally or never
+                        // fully started. That is the desired end state.
+                        //
+                        result = ERROR_SUCCESS;
+                    }
+                    else if (result != ERROR_SUCCESS)
+                    {
+                        //
+                        // The handle-based stop failed. A stale or invalid handle must
+                        // not leave the kernel-side session running (it would survive
+                        // this process and orphan), so retry by session name, which is
+                        // how external tools like logman address sessions.
+                        //
+                        Trace(TraceLoggerType.RealTimeTrace,
+                              TraceEventType.Warning,
+                              $"Handle-based stop failed (0x{result:X}); " +
+                              $"retrying by session name...");
+                        result = ControlTrace(
+                            0,
+                            m_SessionName,
+                            m_PropertiesBuffer,
+                            ControlCode.Stop);
+                        if (result == ERROR_WMI_INSTANCE_NOT_FOUND)
+                        {
+                            result = ERROR_SUCCESS;
+                        }
+                    }
+
+                    LastStopStatus = result;
+                    if (result == ERROR_SUCCESS)
+                    {
+                        m_SessionHandle = 0;
+                    }
+                    else
+                    {
+                        //
+                        // Do NOT zero the handle here: doing so makes every later
+                        // Stop()/Dispose() a silent no-op and permanently orphans the
+                        // kernel-side session. Keeping the handle means the caller
+                        // (or Dispose) can retry.
+                        //
                         Trace(TraceLoggerType.RealTimeTrace,
                               TraceEventType.Error,
-                              $"RealTimeTrace dispose could not stop trace: " +
-                              $"{result:X}");
+                              $"RealTimeTrace could not stop trace: 0x{result:X}; " +
+                              $"session handle retained so Stop() can be retried.");
                     }
-                    m_SessionHandle = 0;
                 }
             }
         }
