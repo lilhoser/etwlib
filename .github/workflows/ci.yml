@@ -8,6 +8,13 @@ permissions:
 jobs:
   etwlib_Unit_Tests:
     runs-on: windows-latest
+    # The FilterBy* tests consume real ETW events and wait for ambient OS
+    # activity to match their filters; on a quiet runner a row can wait
+    # forever (observed: a 92-minute hang inside FilterByPayloadTests,
+    # manually cancelled). The job timeout bounds the damage and
+    # --blame-hang below turns a hang into a failed run with a dump that
+    # names the stuck test.
+    timeout-minutes: 45
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
@@ -29,10 +36,11 @@ jobs:
         run: |
           msbuild.exe etwlib.sln /nologo /nr:false /p:platform="Any CPU" /p:configuration="Release"
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --no-restore --verbosity normal --blame-hang --blame-hang-timeout 15m --blame-hang-dump-type mini
 
   etwlib_AotSmokeTest:
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
