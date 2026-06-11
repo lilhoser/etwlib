@@ -70,9 +70,21 @@ namespace etwlib
 
             Stop();
 
-            if (m_PropertiesBuffer != nint.Zero)
+            //
+            // Free and zero the properties buffer under the same lock Stop()
+            // holds. Because a failed stop now retains the session handle, a
+            // late Stop() call (e.g. an in-flight watchdog timer callback) could
+            // otherwise pass Stop()'s guards and hand ControlTrace a dangling
+            // pointer. Under the lock, a late Stop() either completes before the
+            // free (valid buffer) or observes nint.Zero and no-ops.
+            //
+            lock (m_Lock)
             {
-                Marshal.FreeHGlobal(m_PropertiesBuffer);
+                if (m_PropertiesBuffer != nint.Zero)
+                {
+                    Marshal.FreeHGlobal(m_PropertiesBuffer);
+                    m_PropertiesBuffer = nint.Zero;
+                }
             }
 
             base.Dispose(disposing);

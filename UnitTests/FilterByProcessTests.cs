@@ -19,6 +19,7 @@ under the License.
 using etwlib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -62,10 +63,10 @@ namespace UnitTests
                     // then svchost fillers to exercise the multi-pid filter
                     // plumbing up to the ETW maximum.
                     //
-                    var targets = processes.Where(
+                    var targets = new List<int> { Environment.ProcessId };
+                    targets.AddRange(processes.Where(
                         p => p.ProcessName != null && p.ProcessName.Contains("svchost")).Select(
-                        p => p.Id).Take(ProcessCount - 1).ToList();
-                    targets.Add(Environment.ProcessId);
+                        p => p.Id).Take(ProcessCount - 1));
                     Debug.Assert(targets.Count > 0);
                     var provider = trace.AddProvider(
                         s_RpcEtwGuid, "RPC", EventTraceLevel.LogAlways, 0xFFFFFFFFFFFFFFFF, 0);
