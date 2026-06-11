@@ -177,6 +177,74 @@ namespace etwlib
             }
         }
 
+        /// <summary>
+        /// Temporarily disables every provider on the running session without
+        /// stopping the session or unblocking ProcessTrace. The kernel stops
+        /// generating events for this session at the source; consumption resumes
+        /// after <see cref="ResumeProviders"/>. Both calls are idempotent
+        /// (EnableTraceEx2 succeeds for an already-disabled or already-enabled
+        /// provider). Returns true when every provider call succeeded; on partial
+        /// failure the remaining providers are still attempted so the session is
+        /// left as quiet (or as live) as possible.
+        /// </summary>
+        public bool PauseProviders()
+        {
+            lock (m_Lock)
+            {
+                if (m_SessionHandle == 0 || m_SessionHandle == -1)
+                {
+                    return false;
+                }
+
+                var allSucceeded = true;
+                foreach (var provider in m_EnabledProviders)
+                {
+                    var status = provider.Disable(m_SessionHandle);
+                    if (status != ERROR_SUCCESS)
+                    {
+                        allSucceeded = false;
+                        Trace(TraceLoggerType.RealTimeTrace,
+                              TraceEventType.Error,
+                              $"PauseProviders could not disable provider " +
+                              $"{provider}: 0x{status:X}");
+                    }
+                }
+                return allSucceeded;
+            }
+        }
+
+        /// <summary>
+        /// Re-enables every provider previously disabled by
+        /// <see cref="PauseProviders"/>, using each provider's original level,
+        /// keyword, and filter configuration. Returns true when every provider
+        /// call succeeded.
+        /// </summary>
+        public bool ResumeProviders()
+        {
+            lock (m_Lock)
+            {
+                if (m_SessionHandle == 0 || m_SessionHandle == -1)
+                {
+                    return false;
+                }
+
+                var allSucceeded = true;
+                foreach (var provider in m_EnabledProviders)
+                {
+                    var status = provider.Enable(m_SessionHandle);
+                    if (status != ERROR_SUCCESS)
+                    {
+                        allSucceeded = false;
+                        Trace(TraceLoggerType.RealTimeTrace,
+                              TraceEventType.Error,
+                              $"ResumeProviders could not enable provider " +
+                              $"{provider}: 0x{status:X}");
+                    }
+                }
+                return allSucceeded;
+            }
+        }
+
         public override void Stop()
         {
             lock (m_Lock)
