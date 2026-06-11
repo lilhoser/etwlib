@@ -231,9 +231,14 @@ namespace etwlib
                     {
                         //
                         // Do NOT zero the handle here: doing so makes every later
-                        // Stop()/Dispose() a silent no-op and permanently orphans the
-                        // kernel-side session. Keeping the handle means the caller
-                        // (or Dispose) can retry.
+                        // Stop() a silent no-op and permanently orphans the
+                        // kernel-side session. Keeping the handle lets the caller
+                        // retry. Dispose()'s own Stop() call is the FINAL attempt —
+                        // Dispose frees the properties buffer immediately afterward,
+                        // so no retry is possible once disposal completes. If that
+                        // final attempt also fails, the session can only be stopped
+                        // externally by name (ControlTrace with a zero handle), a
+                        // condition LastStopStatus makes detectable.
                         //
                         Trace(TraceLoggerType.RealTimeTrace,
                               TraceEventType.Error,
