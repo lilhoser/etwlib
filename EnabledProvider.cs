@@ -173,7 +173,16 @@ namespace etwlib
 
         public uint Enable(long SessionHandle)
         {
-            GenerateTraceParameters();
+            //
+            // Generate once, reuse on re-enable: RealTimeTrace.ResumeProviders()
+            // re-enables a provider that was enabled before (same level, keywords,
+            // and filters), and the parameters buffer is immutable after the
+            // filters are configured — regenerating would throw.
+            //
+            if (m_ParametersBuffer == nint.Zero)
+            {
+                GenerateTraceParameters();
+            }
             return EnableTraceEx2(
                     SessionHandle,
                     Id,
