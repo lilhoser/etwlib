@@ -156,7 +156,13 @@ namespace UnitTests
                 }),
                 new BufferCallback((LogFile) => 1));
 
-            coordinator.Wait(TimeSpan.FromSeconds(10));
+            //
+            // The coordinator must have finished before its results are read —
+            // a still-running coordinator would race the assertions below on
+            // pauseResult/resumeResult/coordinatorFailure.
+            //
+            Assert.IsTrue(coordinator.Wait(TimeSpan.FromSeconds(10)),
+                "coordinator did not complete after the trace ended");
 
             Assert.IsNull(coordinatorFailure, coordinatorFailure);
             Assert.IsTrue(pauseResult, "PauseProviders() reported failure");
